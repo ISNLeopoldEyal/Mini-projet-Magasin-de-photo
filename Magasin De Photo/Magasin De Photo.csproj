@@ -94,11 +94,12 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="pictures\open folder.png" />
+    <Resource Include="Images\close file.png" />
+    <Resource Include="Images\save as file.png" />
+    <Resource Include="Images\save file.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="pictures\save as file.png" />
-    <Resource Include="pictures\save file.png" />
+    <Resource Include="Images\open file.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

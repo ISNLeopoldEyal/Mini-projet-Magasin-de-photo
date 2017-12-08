@@ -5,27 +5,39 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Magasin_De_Photo"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Magasin de Photo" Height="350" Width="525">
     <Grid>
-        <ToolBar VerticalAlignment="Top" HorizontalAlignment="Stretch" BorderThickness="1" BorderBrush="Black">
-            <Button x:Name="open_btn" Width="100px" Click="Button_Click">
+        <ToolBar VerticalAlignment="Top" HorizontalAlignment="Stretch" Background="#bbb">
+            <Button Name="open_btn" Width="100px" Height="60" Click="Button_Click">
                 <StackPanel>
-                    <Image x:Name="open_folder"  HorizontalAlignment="Stretch" Width="100" Height="32" Source="pictures\open folder.png"/>
+                    <Image Name="open_folder"  HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\open file.png"/>
                     <Label Content="Open" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="save_btn" Width="100px" Click="Button_Click">
+            <Button Name="save_btn" Width="100px" Height="60" Click="Button_Click">
                 <StackPanel>
-                    <Image x:Name="save_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="pictures\save file.png"/>
+                    <Image Name="save_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\save file.png"/>
                     <Label Content="Save" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="saveas_btn" Width="100px" Click="Button_Click">
+            <Button Name="saveas_btn" Width="100px" Height="60" Click="Button_Click">
                 <StackPanel>
-                    <Image x:Name="saveas_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="pictures\save as file.png"/>
+                    <Image Name="saveas_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\save as file.png"/>
                     <Label Content="Save as" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
+            <Button Name="close_btn" Width="100px" Height="60" Click="Button_Click">
+                <StackPanel>
+                    <Image Name="close_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\close file.png"/>
+                    <Label Content="Close" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </ToolBar>
+        <ToolBar Name="tlb_filters" Header="Filtres" VerticalAlignment="Stretch" HorizontalAlignment="Right" Background="#bbb" Margin="0,60,0,0">
+            <Button Name="filter1" Width="60" Click="Button_Click" Content="Aucun"/>
+            <Button Name="filter2" Width="60" Click="Button_Click" Content="Flou"/>
+            <Button Name="filter3" Width="60" Click="Button_Click" Content="Négatif"/>
+            <Button Name="filter4" Width="60" Click="Button_Click" Content="On verra"/>
         </ToolBar>
     </Grid>
 </Window>
