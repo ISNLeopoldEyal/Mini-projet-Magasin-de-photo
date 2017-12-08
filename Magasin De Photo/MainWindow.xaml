@@ -7,6 +7,25 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <Label Content="Hello mon petit chat"></Label>
+        <ToolBar VerticalAlignment="Top" HorizontalAlignment="Stretch" BorderThickness="1" BorderBrush="Black">
+            <Button x:Name="open_btn" Width="100px" Click="Button_Click">
+                <StackPanel>
+                    <Image x:Name="open_folder"  HorizontalAlignment="Stretch" Width="100" Height="32" Source="pictures\open folder.png"/>
+                    <Label Content="Open" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="save_btn" Width="100px" Click="Button_Click">
+                <StackPanel>
+                    <Image x:Name="save_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="pictures\save file.png"/>
+                    <Label Content="Save" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="saveas_btn" Width="100px" Click="Button_Click">
+                <StackPanel>
+                    <Image x:Name="saveas_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="pictures\save as file.png"/>
+                    <Label Content="Save as" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </ToolBar>
     </Grid>
 </Window>
