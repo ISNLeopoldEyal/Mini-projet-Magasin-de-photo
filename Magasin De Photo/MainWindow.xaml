@@ -5,16 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Magasin_De_Photo"
         mc:Ignorable="d"
-        Title="Magasin de Photo" Height="350" Width="525">
-    <Grid>
+        Title="Magasin de Photo" Height="480" Width="720">
+    <Grid Background="#555">
         <ToolBar VerticalAlignment="Top" HorizontalAlignment="Stretch" Background="#bbb">
-            <Button Name="open_btn" Width="100px" Height="60" Click="Button_Click">
+            <Button Name="open_btn" Width="100px" Height="60" Click="OpenImageFromDialog">
                 <StackPanel>
                     <Image Name="open_folder"  HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\open file.png"/>
                     <Label Content="Open" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
-            <Button Name="save_btn" Width="100px" Height="60" Click="Button_Click">
+            <Button Name="save_btn" Width="100px" Height="60" Click="SaveFileFromDialog">
                 <StackPanel>
                     <Image Name="save_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\save file.png"/>
                     <Label Content="Save" HorizontalAlignment="Center"/>
@@ -26,7 +26,7 @@
                     <Label Content="Save as" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
-            <Button Name="close_btn" Width="100px" Height="60" Click="Button_Click">
+            <Button Name="close_btn" Width="100px" Height="60" Click="CloseImage">
                 <StackPanel>
                     <Image Name="close_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\close file.png"/>
                     <Label Content="Close" HorizontalAlignment="Center"/>
@@ -39,5 +39,6 @@
             <Button Name="filter3" Width="60" Click="Button_Click" Content="Négatif"/>
             <Button Name="filter4" Width="60" Click="Button_Click" Content="On verra"/>
         </ToolBar>
+        <Image Name="display_image" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,70,70,10"/>
     </Grid>
 </Window>
