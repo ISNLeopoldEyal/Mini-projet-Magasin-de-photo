@@ -21,14 +21,19 @@ namespace Magasin_De_Photo
     {
         static string openedFileUri = "";
         static string openedFileName = "";
+        static BitmapImage noFilterImage;
+        static BitmapImage negativeFilterImage;
+        static BitmapImage blurFilterImage;
+        static BitmapImage blacknWhiteFilterImage;
 
         public MainWindow()
         {
             InitializeComponent();
             ChangeOrientationOfFiltersTlb();
-            //display_image.Source = new BitmapImage(new Uri("D:\\All Visual Studio Projects\\Magasin De Photo\\Magasin De Photo\\Images\\colette.png"));
-            //openedFileUri = "D:\\All Visual Studio Projects\\Magasin De Photo\\Magasin De Photo\\Images\\colette.png";
-            //openedFileName = "colette.png";
+            noFilterImage = new BitmapImage(new Uri(@"D:\All Visual Studio Projects\Magasin De Photo\Magasin De Photo\Images\rubik's cube.bmp"));
+            display_image.Source = noFilterImage;
+            openedFileUri = @"D:\All Visual Studio Projects\Magasin De Photo\Magasin De Photo\Images\rubik's cube.bmp";
+            openedFileName = "colette.bmp";
         }
 
         private void ChangeOrientationOfFiltersTlb()
@@ -55,8 +60,8 @@ namespace Magasin_De_Photo
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                DefaultExt = ".png",
-                Filter = "PNG Files (*.png)|*.png|JEG Files (*.jpg)|*.jpg"
+                DefaultExt = ".bmp",
+                Filter = "BMP Files (*.bmp)|*.bmp"
             };
             
             if (openFileDialog.ShowDialog() == true)
@@ -68,18 +73,42 @@ namespace Magasin_De_Photo
                 _bmpi.CacheOption = BitmapCacheOption.OnLoad;
                 _bmpi.UriSource = new Uri(openedFileUri);
                 _bmpi.EndInit();
+                
+                noFilterImage = _bmpi;
+                //MessageBox.Show(GetBitArrayFromImage().ToString(), "Bits Array");
 
-
-                display_image.Source = _bmpi;
-
-                //display_image.Source = new BitmapImage(new Uri(openedFileUri));
+                display_image.Source = noFilterImage;
             }
+        }
+
+        private byte[] GetBitArrayFromImage()
+        {
+            int stride = noFilterImage.PixelWidth * 3;
+            int size = noFilterImage.PixelHeight * stride;
+            byte[] BitsArray = new byte[size];
+            noFilterImage.CopyPixels(BitsArray, stride, 0);
+
+            //Stream _stream = _bmp.StreamSource;
+            //if (_stream != null && _stream.Length > 0)
+            //{
+            //    using (BinaryReader _br = new BinaryReader(_stream))
+            //    {
+            //        BitsArray = _br.ReadBytes((Int32)_stream.Length);
+            //    }
+            //}
+
+            return BitsArray;
         }
 
         private void CloseImage(object sender, RoutedEventArgs e)
         {
             display_image.Source = null;
             openedFileUri = "";
+            openedFileName = null;
+            noFilterImage = null;
+            negativeFilterImage = null;
+            blurFilterImage = null;
+            blacknWhiteFilterImage = null;
         }
 
         private void SaveFile(object sender, RoutedEventArgs e)
@@ -121,8 +150,8 @@ namespace Magasin_De_Photo
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
-                DefaultExt = ".png",
-                Filter = "PNG Files (*.png)|*.png|JEG Files (*.jpg)|*.jpg"
+                DefaultExt = ".bmp",
+                Filter = "BMP Files (*.bmp)|*.bmp"
             };
 
             if (saveFileDialog.ShowDialog() == true)

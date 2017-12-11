@@ -101,5 +101,8 @@
   <ItemGroup>
     <Resource Include="Images\open file.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\rubik%27s cube.bmp" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
