@@ -30,10 +30,10 @@ namespace Magasin_De_Photo
         {
             InitializeComponent();
             ChangeOrientationOfFiltersTlb();
-            noFilterImage = new BitmapImage(new Uri(@"D:\All Visual Studio Projects\Magasin De Photo\Magasin De Photo\Images\rubik's cube.bmp"));
-            display_image.Source = noFilterImage;
-            openedFileUri = @"D:\All Visual Studio Projects\Magasin De Photo\Magasin De Photo\Images\rubik's cube.bmp";
-            openedFileName = "colette.bmp";
+//            noFilterImage = new BitmapImage(new Uri(@"D:\All Visual Studio Projects\Magasin De Photo\Magasin De Photo\Images\rubik's cube.bmp"));
+//            display_image.Source = noFilterImage;
+//            openedFileUri = @"D:\All Visual Studio Projects\Magasin De Photo\Magasin De Photo\Images\rubik's cube.bmp";
+//            openedFileName = "colette.bmp";
         }
 
         private void ChangeOrientationOfFiltersTlb()
