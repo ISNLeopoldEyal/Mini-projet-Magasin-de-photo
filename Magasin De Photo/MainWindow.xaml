@@ -14,30 +14,39 @@
                     <Label Content="Open" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
-            <Button Name="save_btn" Width="100px" Height="60" Click="SaveFileFromDialog">
+            <Separator Background="#555"/>
+            <Button Name="save_btn" Width="100px" Height="60" Click="SaveFile">
                 <StackPanel>
                     <Image Name="save_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\save file.png"/>
                     <Label Content="Save" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
-            <Button Name="saveas_btn" Width="100px" Height="60" Click="Button_Click">
+            <Separator Background="#555"/>
+            <Button Name="saveas_btn" Width="100px" Height="60" Click="SaveAsFileFromDialog">
                 <StackPanel>
                     <Image Name="saveas_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\save as file.png"/>
                     <Label Content="Save as" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
+            <Separator Background="#555"/>
             <Button Name="close_btn" Width="100px" Height="60" Click="CloseImage">
                 <StackPanel>
                     <Image Name="close_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\close file.png"/>
                     <Label Content="Close" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
+            <Separator Background="#555"/>
         </ToolBar>
         <ToolBar Name="tlb_filters" Header="Filtres" VerticalAlignment="Stretch" HorizontalAlignment="Right" Background="#bbb" Margin="0,60,0,0">
             <Button Name="filter1" Width="60" Click="Button_Click" Content="Aucun"/>
+            <Separator Background="#555"/>
             <Button Name="filter2" Width="60" Click="Button_Click" Content="Flou"/>
+            <Separator Background="#555"/>
             <Button Name="filter3" Width="60" Click="Button_Click" Content="Négatif"/>
-            <Button Name="filter4" Width="60" Click="Button_Click" Content="On verra"/>
+            <Separator Background="#555"/>
+            <Button Name="filter4" Width="60" Click="Button_Click"/>
+            <Separator Background="#555"/>
+            <Button Name="filter5" Width="60" Click="Button_Click" Content="On verra"/>
         </ToolBar>
         <Image Name="display_image" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,70,70,10"/>
     </Grid>

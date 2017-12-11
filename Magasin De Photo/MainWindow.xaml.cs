@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,13 +20,15 @@ namespace Magasin_De_Photo
     public partial class MainWindow : Window
     {
         static string openedFileUri = "";
+        static string openedFileName = "";
 
         public MainWindow()
         {
             InitializeComponent();
             ChangeOrientationOfFiltersTlb();
-            //display_image.Source = new BitmapImage(new Uri("D:\\All Visual Studio Projects\\Magasin De Photo\\Magasin De Photo\\Images\\open file.png"));
-            //openedFileUri = "D:\\All Visual Studio Projects\\Magasin De Photo\\Magasin De Photo\\Images\\open file.png";
+            //display_image.Source = new BitmapImage(new Uri("D:\\All Visual Studio Projects\\Magasin De Photo\\Magasin De Photo\\Images\\colette.png"));
+            //openedFileUri = "D:\\All Visual Studio Projects\\Magasin De Photo\\Magasin De Photo\\Images\\colette.png";
+            //openedFileName = "colette.png";
         }
 
         private void ChangeOrientationOfFiltersTlb()
@@ -37,6 +40,9 @@ namespace Magasin_De_Photo
             filter2.LayoutTransform = rotate1;
             filter3.LayoutTransform = rotate1;
             filter4.LayoutTransform = rotate1;
+            filter5.LayoutTransform = rotate1;
+
+            filter4.Content = "N&B";
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -50,45 +56,78 @@ namespace Magasin_De_Photo
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 DefaultExt = ".png",
-                Filter = "PNG Files (*.png)|*.png"
+                Filter = "PNG Files (*.png)|*.png|JEG Files (*.jpg)|*.jpg"
             };
             
             if (openFileDialog.ShowDialog() == true)
             {
-                // Open document 
-                string filename = openFileDialog.FileName;
-                openedFileUri = filename;
-                display_image.Source = new BitmapImage(new Uri(filename));
+                openedFileUri = openFileDialog.FileName;
+
+                BitmapImage _bmpi = new BitmapImage();
+                _bmpi.BeginInit();
+                _bmpi.CacheOption = BitmapCacheOption.OnLoad;
+                _bmpi.UriSource = new Uri(openedFileUri);
+                _bmpi.EndInit();
+
+
+                display_image.Source = _bmpi;
+
+                //display_image.Source = new BitmapImage(new Uri(openedFileUri));
             }
         }
 
         private void CloseImage(object sender, RoutedEventArgs e)
         {
             display_image.Source = null;
+            openedFileUri = "";
         }
 
-        private void SaveFileFromDialog(object sender, RoutedEventArgs e)
+        private void SaveFile(object sender, RoutedEventArgs e)
+        {
+            //if (display_image.Source != null)
+            //{
+            //    SaveActualFile();
+            //}
+            //else { return; }
+        }
+
+        private void SaveActualFile()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                FileName = openedFileUri
+            };
+
+            File.Replace(openedFileUri, openedFileUri, null);
+
+            //PngBitmapEncoder encoder = new PngBitmapEncoder();
+            //encoder.Frames.Add(BitmapFrame.Create(new Uri(openedFileUri)));
+            //using (var stream = File.(openedFileUri))
+            //{
+            //    encoder.Save(stream);
+            //}
+        }
+
+        private void SaveAsFileFromDialog(object sender, RoutedEventArgs e)
+        {
+            if (display_image.Source != null)
+            {
+                SaveAsFile();
+            }
+            else { return; }
+        }
+
+        private void SaveAsFile()
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
                 DefaultExt = ".png",
-                Filter = "PNG Files (*.png)|*.png",
+                Filter = "PNG Files (*.png)|*.png|JEG Files (*.jpg)|*.jpg"
             };
 
-            if(saveFileDialog.ShowDialog() == true)
+            if (saveFileDialog.ShowDialog() == true)
             {
-                var encoder = new PngBitmapEncoder();
-                string path = saveFileDialog.FileName;
-                char character = path[path.Length - 1];
-                while(character != '\\')
-                {
-                    path = path.Remove(path.Length - 1);
-                    character = path[path.Length - 1];
-                }
-
-                path.Remove(path.Length - 1);
-                path.Remove(path.Length - 1);
-
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
                 encoder.Frames.Add(BitmapFrame.Create(new Uri(openedFileUri)));
                 using (var stream = saveFileDialog.OpenFile())
                 {
