@@ -30,10 +30,6 @@ namespace Magasin_De_Photo
         {
             InitializeComponent();
             ChangeOrientationOfFiltersTlb();
-//            noFilterImage = new BitmapImage(new Uri(@"D:\All Visual Studio Projects\Magasin De Photo\Magasin De Photo\Images\rubik's cube.bmp"));
-//            display_image.Source = noFilterImage;
-//            openedFileUri = @"D:\All Visual Studio Projects\Magasin De Photo\Magasin De Photo\Images\rubik's cube.bmp";
-//            openedFileName = "colette.bmp";
         }
 
         private void ChangeOrientationOfFiltersTlb()
@@ -76,6 +72,9 @@ namespace Magasin_De_Photo
                 
                 noFilterImage = _bmpi;
                 //MessageBox.Show(GetBitArrayFromImage().ToString(), "Bits Array");
+                byte[] array = GetBitArrayFromImage();
+                noFilterImage = FromArrayToImage(array);
+
 
                 display_image.Source = noFilterImage;
             }
@@ -84,20 +83,60 @@ namespace Magasin_De_Photo
         private byte[] GetBitArrayFromImage()
         {
             int stride = noFilterImage.PixelWidth * 3;
+            if (stride < 1092)
+                stride = 1092;
             int size = noFilterImage.PixelHeight * stride;
-            byte[] BitsArray = new byte[size];
-            noFilterImage.CopyPixels(BitsArray, stride, 0);
+            byte[] bitsArray = new byte[size];
+            noFilterImage.CopyPixels(bitsArray, stride, 00);
+            //DisplayBits(bitsArray);
 
-            //Stream _stream = _bmp.StreamSource;
-            //if (_stream != null && _stream.Length > 0)
-            //{
-            //    using (BinaryReader _br = new BinaryReader(_stream))
-            //    {
-            //        BitsArray = _br.ReadBytes((Int32)_stream.Length);
-            //    }
-            //}
 
-            return BitsArray;
+            byte[] goodSizeArray = new byte[noFilterImage.PixelWidth * 3 * noFilterImage.PixelHeight];
+            for (int loop = 0; loop < goodSizeArray.Length - 1; loop++)
+            {
+                goodSizeArray[loop] = (byte)(255 - bitsArray[loop]);
+            }
+
+            return goodSizeArray;
+        }
+
+        public BitmapImage FromArrayToImage(byte[] array)
+        {
+            var ms = new MemoryStream(array);          
+            BitmapImage biImg = new BitmapImage();
+            biImg.BeginInit();
+            biImg.StreamSource = ms;
+            biImg.EndInit();
+            
+            return biImg;
+            
+        }
+
+        private byte[,] DisplayBits(byte[] bitArray)
+        {
+            int arrayWidth = noFilterImage.PixelWidth * 3,
+                arrayHeight = noFilterImage.PixelHeight,
+                index = 0;
+            byte[,] twoDimensionnalArray = new byte[arrayWidth, arrayHeight];
+            byte one, two, three;
+
+
+            for(int b = 0; b < arrayHeight - 1; b++)
+            {
+                for (int a = 0; a < arrayWidth - 1; a+=3)
+                {
+                    twoDimensionnalArray[a,b] = bitArray[index];
+                    twoDimensionnalArray[a + 1, b] = bitArray[index+1];
+                    twoDimensionnalArray[a + 2, b] = bitArray[index+2];
+                    one = twoDimensionnalArray[a, b];
+                    two = twoDimensionnalArray[a + 1, b];
+                    three = twoDimensionnalArray[a + 2, b];
+                    index += 3;
+                    MessageBox.Show(one.ToString() +","+ two.ToString() + ","+ three.ToString(), a+","+b);
+                }
+            }
+
+            return twoDimensionnalArray;
         }
 
         private void CloseImage(object sender, RoutedEventArgs e)
