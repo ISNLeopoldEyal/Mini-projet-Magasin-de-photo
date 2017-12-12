@@ -38,16 +38,41 @@
             <Separator Background="#555"/>
         </ToolBar>
         <ToolBar Name="tlb_filters" Header="Filtres" VerticalAlignment="Stretch" HorizontalAlignment="Right" Background="#bbb" Margin="0,60,0,0">
-            <Button Name="filter1" Width="60" Click="Button_Click" Content="Aucun"/>
+            <Button Name="filter1" Width="70" Click="DisplayNoFilter">
+                <StackPanel>
+                    <Image/>
+                    <Label Content="Aucun"/>
+                </StackPanel>
+            </Button>
             <Separator Background="#555"/>
-            <Button Name="filter2" Width="60" Click="Button_Click" Content="Flou"/>
+            <Button Name="filter2" Width="70" Click="DisplayNegative">
+                <StackPanel>
+                    <Image/>
+                    <Label Content="Négatif"/>
+                </StackPanel>
+            </Button>
             <Separator Background="#555"/>
-            <Button Name="filter3" Width="60" Click="Button_Click" Content="Négatif"/>
+            <Button Name="filter3" Width="70" Click="DisplayBlur">
+                <StackPanel>
+                    <Image/>
+                    <Label Content="Flou"/>
+                </StackPanel>
+            </Button>
             <Separator Background="#555"/>
-            <Button Name="filter4" Width="60" Click="Button_Click"/>
+            <Button Name="filter4" Width="70" Click="DisplayBlacknWhite">
+                <StackPanel>
+                    <Image/>
+                    <Label Content="N&amp;B"/>
+                </StackPanel>
+            </Button>
             <Separator Background="#555"/>
-            <Button Name="filter5" Width="60" Click="Button_Click" Content="On verra"/>
+            <Button Name="filter5" Width="70">
+                <StackPanel>
+                    <Image/>
+                    <Label Content="On verra"/>
+                </StackPanel>
+            </Button>
         </ToolBar>
-        <Image Name="display_image" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,70,70,10"/>
+        <Image Name="display_image" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,70,80,5"/>
     </Grid>
 </Window>

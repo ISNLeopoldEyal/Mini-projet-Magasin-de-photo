@@ -19,12 +19,12 @@ namespace Magasin_De_Photo
 {
     public partial class MainWindow : Window
     {
-        static string openedFileUri = "";
-        static string openedFileName = "";
-        static BitmapImage noFilterImage;
-        static BitmapImage negativeFilterImage;
-        static BitmapImage blurFilterImage;
-        static BitmapImage blacknWhiteFilterImage;
+        static string openedFileUri;
+        static string openedFileName;
+        static BitmapSource noFilterImage = null;
+        static BitmapSource negativeFilterImage = null;
+        static BitmapSource blurFilterImage = null;
+        static BitmapSource blacknWhiteFilterImage = null;
 
         public MainWindow()
         {
@@ -42,14 +42,59 @@ namespace Magasin_De_Photo
             filter3.LayoutTransform = rotate1;
             filter4.LayoutTransform = rotate1;
             filter5.LayoutTransform = rotate1;
-
-            filter4.Content = "N&B";
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private byte[] GetBitArrayFromImage()
         {
-            Button _btn = (Button)sender;
-            //MessageBox.Show("You clicked the "+_btn.Name+" button", "Clicked a tabbed button");
+            int stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
+            byte[] pixels = new byte[(int)noFilterImage.PixelHeight * stride];
+
+            noFilterImage.CopyPixels(pixels, stride, 0);
+            //DisplayBits(pixels);
+            
+            return pixels;
+        }
+
+        public BitmapSource FromArrayToImage(byte[] pixels)
+        {
+            int width = noFilterImage.PixelWidth,
+                height = noFilterImage.PixelHeight,
+                stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
+
+            double dpiX = noFilterImage.DpiX,
+                   dpiY = noFilterImage.DpiY;
+
+            PixelFormat format = noFilterImage.Format;
+            BitmapPalette palette = noFilterImage.Palette;
+
+            BitmapSource bitmap = BitmapSource.Create(width, height, dpiX, dpiY, format, palette, pixels, stride);
+                       
+            return bitmap;
+        }
+        
+        private void DisplayNoFilter(object sender, RoutedEventArgs e)
+        {
+            if(noFilterImage != null)
+                display_image.Source = noFilterImage;
+        }
+
+        private void DisplayNegative(object sender, RoutedEventArgs e)
+        {
+            if (negativeFilterImage != null)
+                display_image.Source = negativeFilterImage;
+        }
+
+        private void DisplayBlur(object sender, RoutedEventArgs e)
+        {
+            if (blurFilterImage != null)
+                display_image.Source = blurFilterImage;
+        }
+
+        private void DisplayBlacknWhite(object sender, RoutedEventArgs e)
+        {
+            if (blacknWhiteFilterImage != null)
+                display_image.Source = blacknWhiteFilterImage;
+
         }
 
         private void OpenImageFromDialog(object sender, RoutedEventArgs e)
@@ -59,7 +104,7 @@ namespace Magasin_De_Photo
                 DefaultExt = ".bmp",
                 Filter = "BMP Files (*.bmp)|*.bmp"
             };
-            
+
             if (openFileDialog.ShowDialog() == true)
             {
                 openedFileUri = openFileDialog.FileName;
@@ -69,85 +114,11 @@ namespace Magasin_De_Photo
                 _bmpi.CacheOption = BitmapCacheOption.OnLoad;
                 _bmpi.UriSource = new Uri(openedFileUri);
                 _bmpi.EndInit();
-                
+
                 noFilterImage = _bmpi;
-                //MessageBox.Show(GetBitArrayFromImage().ToString(), "Bits Array");
-                byte[] array = GetBitArrayFromImage();
-                noFilterImage = FromArrayToImage(array);
-
-
                 display_image.Source = noFilterImage;
+                byte[] allPixels = GetBitArrayFromImage();
             }
-        }
-
-        private byte[] GetBitArrayFromImage()
-        {
-            int stride = noFilterImage.PixelWidth * 3;
-            if (stride < 1092)
-                stride = 1092;
-            int size = noFilterImage.PixelHeight * stride;
-            byte[] bitsArray = new byte[size];
-            noFilterImage.CopyPixels(bitsArray, stride, 00);
-            //DisplayBits(bitsArray);
-
-
-            byte[] goodSizeArray = new byte[noFilterImage.PixelWidth * 3 * noFilterImage.PixelHeight];
-            for (int loop = 0; loop < goodSizeArray.Length - 1; loop++)
-            {
-                goodSizeArray[loop] = (byte)(255 - bitsArray[loop]);
-            }
-
-            return goodSizeArray;
-        }
-
-        public BitmapImage FromArrayToImage(byte[] array)
-        {
-            var ms = new MemoryStream(array);          
-            BitmapImage biImg = new BitmapImage();
-            biImg.BeginInit();
-            biImg.StreamSource = ms;
-            biImg.EndInit();
-            
-            return biImg;
-            
-        }
-
-        private byte[,] DisplayBits(byte[] bitArray)
-        {
-            int arrayWidth = noFilterImage.PixelWidth * 3,
-                arrayHeight = noFilterImage.PixelHeight,
-                index = 0;
-            byte[,] twoDimensionnalArray = new byte[arrayWidth, arrayHeight];
-            byte one, two, three;
-
-
-            for(int b = 0; b < arrayHeight - 1; b++)
-            {
-                for (int a = 0; a < arrayWidth - 1; a+=3)
-                {
-                    twoDimensionnalArray[a,b] = bitArray[index];
-                    twoDimensionnalArray[a + 1, b] = bitArray[index+1];
-                    twoDimensionnalArray[a + 2, b] = bitArray[index+2];
-                    one = twoDimensionnalArray[a, b];
-                    two = twoDimensionnalArray[a + 1, b];
-                    three = twoDimensionnalArray[a + 2, b];
-                    index += 3;
-                    MessageBox.Show(one.ToString() +","+ two.ToString() + ","+ three.ToString(), a+","+b);
-                }
-            }
-
-            return twoDimensionnalArray;
-        }
-
-        private void CloseImage(object sender, RoutedEventArgs e)
-        {
-            display_image.Source = null;
-            openedFileUri = "";
-            openedFileName = null;
-            noFilterImage = null;
-            negativeFilterImage = null;
-            blurFilterImage = null;
-            blacknWhiteFilterImage = null;
         }
 
         private void SaveFile(object sender, RoutedEventArgs e)
@@ -165,15 +136,7 @@ namespace Magasin_De_Photo
             {
                 FileName = openedFileUri
             };
-
             File.Replace(openedFileUri, openedFileUri, null);
-
-            //PngBitmapEncoder encoder = new PngBitmapEncoder();
-            //encoder.Frames.Add(BitmapFrame.Create(new Uri(openedFileUri)));
-            //using (var stream = File.(openedFileUri))
-            //{
-            //    encoder.Save(stream);
-            //}
         }
 
         private void SaveAsFileFromDialog(object sender, RoutedEventArgs e)
@@ -195,13 +158,52 @@ namespace Magasin_De_Photo
 
             if (saveFileDialog.ShowDialog() == true)
             {
-                PngBitmapEncoder encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(new Uri(openedFileUri)));
+                BitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
+                ///encoder.Frames.Add(BitmapFrame.Create(new Uri(openedFileUri)));
                 using (var stream = saveFileDialog.OpenFile())
                 {
                     encoder.Save(stream);
                 }
             }
+        }
+
+        private void CloseImage(object sender, RoutedEventArgs e)
+        {
+            display_image.Source = null;
+            openedFileUri = "";
+            openedFileName = null;
+            noFilterImage = null;
+            negativeFilterImage = null;
+            blurFilterImage = null;
+            blacknWhiteFilterImage = null;
+        }
+
+        private byte[,] DebugDisplayBits(byte[] bitArray)
+        {
+            int arrayWidth = noFilterImage.PixelWidth * 3,
+                arrayHeight = noFilterImage.PixelHeight,
+                index = 0;
+            byte[,] twoDimensionnalArray = new byte[arrayWidth, arrayHeight];
+            byte one, two, three;
+
+
+            for (int b = 0; b < arrayHeight - 1; b++)
+            {
+                for (int a = 0; a < arrayWidth - 1; a += 3)
+                {
+                    twoDimensionnalArray[a, b] = bitArray[index];
+                    twoDimensionnalArray[a + 1, b] = bitArray[index + 1];
+                    twoDimensionnalArray[a + 2, b] = bitArray[index + 2];
+                    one = twoDimensionnalArray[a, b];
+                    two = twoDimensionnalArray[a + 1, b];
+                    three = twoDimensionnalArray[a + 2, b];
+                    index += 3;
+                    MessageBox.Show(one.ToString() + "," + two.ToString() + "," + three.ToString(), a + "," + b);
+                }
+            }
+
+            return twoDimensionnalArray;
         }
     }
 }
