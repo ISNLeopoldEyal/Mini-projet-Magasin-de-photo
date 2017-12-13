@@ -50,9 +50,22 @@ namespace Magasin_De_Photo
             byte[] pixels = new byte[(int)noFilterImage.PixelHeight * stride];
 
             noFilterImage.CopyPixels(pixels, stride, 0);
-            //DisplayBits(pixels);
-            
+            //DebugDisplayBits(pixels);
+            //Show_CleanArray(pixels);
+
             return pixels;
+        }
+
+        public void Show_CleanArray (byte[] array)
+        {
+            string final = "";
+
+            for (int x = 0; x < array.Length; x++)
+            {
+                final += array[x] + ".";
+            }
+
+            MessageBox.Show(final);
         }
 
         public BitmapSource FromArrayToImage(byte[] pixels)
@@ -118,8 +131,109 @@ namespace Magasin_De_Photo
                 noFilterImage = _bmpi;
                 display_image.Source = noFilterImage;
                 byte[] allPixels = GetBitArrayFromImage();
+
+                CreateAllFilters(allPixels);
             }
         }
+
+        private void CreateAllFilters (byte[] allPixels)
+        {
+            CreateFilter_BlacknWhite(allPixels);
+            CreateFilter_Negative(allPixels);
+        }
+
+        private void CreateFilter_Negative (byte[] array)
+        {
+            for (int x = 0; x < array.Length; x++)
+                array[x] = (byte)(255 - array[x]);
+
+            negativeFilterImage = FromArrayToImage(array);
+        }
+
+        private void CreateFilter_BlacknWhite (byte[] array)
+        {
+            // 0.299 * R + 0.587 * G + 0.114 * B
+
+            float BlueRatio = 0.114f;
+            float GreenRatio = 0.587f;
+            float RedRatio = 0.229f;
+
+            int colorState = 0;
+            int rowState = 0;
+            int waitState = 0;
+
+            int offsetLength = 0;
+            
+            bool WaitingForOffset = false;
+            
+            byte pixelGreyShade = 0;
+
+            //string final = "";
+            
+            for (int x = array.Length - 1; x > 0; x--)
+            {
+                if (array[x] != 0)
+                {
+                    break;
+                }
+
+                offsetLength++;
+            }
+
+            for (int x = 0; x < array.Length; x++)
+            {
+                if (WaitingForOffset == true)
+                {
+                    //final += array[x] + ".";
+
+                    waitState++;
+
+                    if (waitState >= offsetLength)
+                    {
+                        colorState = 0;
+                        rowState = 0;
+                        waitState = 0;
+
+                        WaitingForOffset = false;
+                        //final += " - ";
+                    }
+
+
+                }
+                else
+                {
+                    if (colorState == 0)
+                        pixelGreyShade = (byte)(RedRatio * array[x] + GreenRatio * array[x+1] + BlueRatio * array[x+2]);
+                
+                    array[x] = pixelGreyShade;
+                    
+
+                    if (colorState == 3)
+                        array[x] = 255;
+
+                    colorState++;
+                    rowState++;
+
+                    //final += array[x] + ".";
+                    
+                    if (colorState > 3)
+                    {
+                        colorState = 0;
+                        //final +=  " - ";
+                    }
+
+                    if (rowState >= noFilterImage.PixelWidth * 4)
+                        WaitingForOffset = true;
+                }
+
+            }
+
+            //MessageBox.Show(final);
+
+            blacknWhiteFilterImage = FromArrayToImage(array);
+
+        }
+
 
         private void SaveFile(object sender, RoutedEventArgs e)
         {
