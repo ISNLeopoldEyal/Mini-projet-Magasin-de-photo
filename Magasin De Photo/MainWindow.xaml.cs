@@ -68,7 +68,7 @@ namespace Magasin_De_Photo
             MessageBox.Show(final);
         }
 
-        public BitmapSource FromArrayToImage(byte[] pixels)
+        private BitmapSource FromArrayToImage(byte[] pixels)
         {
             int width = noFilterImage.PixelWidth,
                 height = noFilterImage.PixelHeight,
@@ -107,7 +107,14 @@ namespace Magasin_De_Photo
         {
             if (blacknWhiteFilterImage != null)
                 display_image.Source = blacknWhiteFilterImage;
+        }
 
+        private void SetLayoutPreviews()
+        {
+            no_filter_preview.Source = noFilterImage;
+            negative_filter_preview.Source = negativeFilterImage;
+            blur_filter_preview.Source = blurFilterImage;
+            blacknwhite_filter_preview.Source = blacknWhiteFilterImage;
         }
 
         private void OpenImageFromDialog(object sender, RoutedEventArgs e)
@@ -133,13 +140,77 @@ namespace Magasin_De_Photo
                 byte[] allPixels = GetBitArrayFromImage();
 
                 CreateAllFilters(allPixels);
+                SetLayoutPreviews();
             }
         }
 
-        private void CreateAllFilters (byte[] allPixels)
+        private void CreateAllFilters (byte[] array)
         {
-            CreateFilter_BlacknWhite(allPixels);
-            CreateFilter_Negative(allPixels);
+            byte[,] twoDim = FromOneToTwoDimesionsArray(array);
+            array = FromTwoToOneDimension(twoDim, array);
+            
+            CreateFilter_BlacknWhite((byte[])array.Clone());
+            CreateFilter_Negative((byte[])array.Clone());
+            CreateFilter_Blur((byte[,])twoDim.Clone(), (byte[])array.Clone());
+        }
+
+        private void CreateFilter_Blur(byte[,] array, byte[] original)
+        {
+            byte neighborAverage = 0;
+            for(int y = 0; y < array.GetLength(1); y++)
+            {
+                for(int x = 0; x < array.GetLength(0); x++)
+                {
+                    neighborAverage = (byte)GetNeighborAverage(array, x, y);
+                    array[x, y] = neighborAverage;
+                }
+            }
+
+            original = FromTwoToOneDimension(array, original);
+            blurFilterImage = FromArrayToImage(original);
+        }
+
+        private int GetNeighborAverage(byte[,] array, int x, int y)
+        {
+            double numbersInSum = 0,
+                sum = array[x,y],
+                xMax = array.GetLength(0) - 1,
+                yMax = array.GetLength(1) - 1,
+                average;
+
+            if (x > 0)
+            {
+                sum += array[x - 1, y];
+                numbersInSum++;
+            }
+            if (y > 0)
+            {
+                sum += array[x, y - 1];
+                numbersInSum++;
+            }
+            if (x > 0 && y > 0)
+            {
+                sum += array[x - 1, y - 1];
+                numbersInSum++;
+            }
+            if (x < xMax)
+            {
+                sum += array[x + 1, y];
+                numbersInSum++;
+            }
+            if (y < yMax)
+            {
+                sum += array[x, y + 1];
+                numbersInSum++;
+            }
+            if (x < xMax && y < yMax)
+            {
+                sum += array[x + 1, y + 1];
+                numbersInSum++;
+            }
+
+            average = Math.Round(sum / numbersInSum);
+            return (int)average;
         }
 
         private void CreateFilter_Negative (byte[] array)
@@ -197,8 +268,6 @@ namespace Magasin_De_Photo
                         WaitingForOffset = false;
                         //final += " - ";
                     }
-
-
                 }
                 else
                 {
@@ -231,9 +300,44 @@ namespace Magasin_De_Photo
             //MessageBox.Show(final);
 
             blacknWhiteFilterImage = FromArrayToImage(array);
-
         }
 
+        private byte[,] FromOneToTwoDimesionsArray(byte[] oneDimension)
+        {
+            int width = noFilterImage.PixelWidth*3, height = noFilterImage.PixelHeight, index;
+            byte[,] twoDimensions = new byte[width,height];
+
+            for(int y = 0; y < height; y++)
+            {
+                for(int x = 0; x < width; x++)
+                {
+                    index = width * y + x;
+                    twoDimensions[x, y] = oneDimension[index];
+                    //MessageBox.Show(x + "," + y +" : "+ twoDimensions[x, y], "On index : " + index);
+                }
+            }
+
+            return twoDimensions;
+        }
+
+        private byte[] FromTwoToOneDimension (byte[,] twoDimensions, byte[] original)
+        {
+            int width = noFilterImage.PixelWidth*3, height = noFilterImage.PixelHeight, x = 0, y = 0;
+
+            for(int index = 0; index < width*height; index++)
+            {
+                original[index] = twoDimensions[x, y];
+                //MessageBox.Show(index + " : " + original[index], "On index : "+ x + "," + y);
+                x++;
+                if(x == width)
+                {
+                    x = 0;
+                    y++;
+                }
+            }
+
+            return original;
+        }
 
         private void SaveFile(object sender, RoutedEventArgs e)
         {

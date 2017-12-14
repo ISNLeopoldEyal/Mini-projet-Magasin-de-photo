@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Magasin_De_Photo"
         mc:Ignorable="d"
-        Title="Magasin de Photo" Height="480" Width="720">
+        Title="Magasin de Photo" Height="600" Width="720">
     <Grid Background="#555">
         <ToolBar VerticalAlignment="Top" HorizontalAlignment="Stretch" Background="#bbb">
             <Button Name="open_btn" Width="100px" Height="60" Click="OpenImageFromDialog">
@@ -40,29 +40,29 @@
         <ToolBar Name="tlb_filters" Header="Filtres" VerticalAlignment="Stretch" HorizontalAlignment="Right" Background="#bbb" Margin="0,60,0,0">
             <Button Name="filter1" Width="70" Click="DisplayNoFilter">
                 <StackPanel>
-                    <Image/>
-                    <Label Content="Aucun"/>
+                    <Image Name="no_filter_preview"/>
+                    <Label Content="Aucun" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
             <Separator Background="#555"/>
             <Button Name="filter2" Width="70" Click="DisplayNegative">
                 <StackPanel>
-                    <Image/>
-                    <Label Content="Négatif"/>
+                    <Image Name="negative_filter_preview"/>
+                    <Label Content="Négatif" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
             <Separator Background="#555"/>
             <Button Name="filter3" Width="70" Click="DisplayBlur">
                 <StackPanel>
-                    <Image/>
-                    <Label Content="Flou"/>
+                    <Image Name="blur_filter_preview"/>
+                    <Label Content="Flou" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
             <Separator Background="#555"/>
             <Button Name="filter4" Width="70" Click="DisplayBlacknWhite">
                 <StackPanel>
-                    <Image/>
-                    <Label Content="N&amp;B"/>
+                    <Image Name="blacknwhite_filter_preview"/>
+                    <Label Content="N&amp;B" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
             <Separator Background="#555"/>
