@@ -51,19 +51,17 @@ namespace Magasin_De_Photo
 
             noFilterImage.CopyPixels(pixels, stride, 0);
             //DebugDisplayBits(pixels);
-            //Show_CleanArray(pixels);
+            //DEBUG_ShowCleanArray(pixels);
 
             return pixels;
         }
 
-        public void Show_CleanArray (byte[] array)
+        public void DEBUG_ShowCleanArray (byte[] array)
         {
             string final = "";
 
             for (int x = 0; x < array.Length; x++)
-            {
                 final += array[x] + ".";
-            }
 
             MessageBox.Show(final);
         }
@@ -148,12 +146,106 @@ namespace Magasin_De_Photo
         {
             byte[,] twoDim = FromOneToTwoDimesionsArray(array);
             array = FromTwoToOneDimension(twoDim, array);
-            
-            CreateFilter_BlacknWhite((byte[])array.Clone());
-            CreateFilter_Negative((byte[])array.Clone());
+
+            ApplyFilterToArray((byte[])array.Clone() , negativeFilterImage);
+            ApplyFilterToArray((byte[])array.Clone() , blacknWhiteFilterImage);
+
             CreateFilter_Blur((byte[,])twoDim.Clone(), (byte[])array.Clone());
         }
+        
+        private void ApplyFilterToArray (byte[] array, BitmapSource _bitmapSource)
+        {
+            int colorState = 0;
+            int rowState = 0;
+            int waitState = 0;
 
+            int offsetLength = 0;
+            
+            bool WaitingForOffset = false;
+
+
+            // NEGATIVE FILTER
+            byte filtersPixelColor_Negative = 0;
+
+            // BLACK AND WHITE FILTER
+            byte filtersPixelColor_BlacknWhite= 0;
+
+            float BlueRatio = 0.114f;
+            float GreenRatio = 0.587f;
+            float RedRatio = 0.229f;
+
+
+            //string final = "";
+
+            for (int x = array.Length - 1; x > 0; x--)
+            {
+                if (array[x] != 0)
+                    break;
+
+                offsetLength++;
+            }
+
+            for (int x = 0; x < array.Length; x++)
+            {
+                if (WaitingForOffset == true)
+                {
+                    //final += array[x] + ".";
+
+                    waitState++;
+
+                    if (waitState >= offsetLength)
+                    {
+                        colorState = 0;
+                        rowState = 0;
+                        waitState = 0;
+
+                        WaitingForOffset = false;
+                    }
+                }
+                else
+                {
+                    // WORK OUT COLOR
+                    filtersPixelColor_Negative = (byte)(255 - array[x]);
+
+                    if (colorState == 0)
+                        filtersPixelColor_BlacknWhite = (byte)(RedRatio * array[x] + GreenRatio * array[x+1] + BlueRatio * array[x+2]);
+
+                    // APPLY
+                    if (_bitmapSource == negativeFilterImage)  // negative
+                        array[x] = filtersPixelColor_Negative;
+
+                    else if (_bitmapSource == blacknWhiteFilterImage)  // black and white
+                        array[x] = filtersPixelColor_BlacknWhite;
+                    
+
+                    if (colorState == 3)
+                        array[x] = 255;
+
+                    colorState++;
+                    rowState++;
+
+                    //final += array[x] + ".";
+                    
+                    if (colorState > 3)
+                        colorState = 0;
+
+                    if (rowState >= noFilterImage.PixelWidth * 4)
+                        WaitingForOffset = true;
+                }
+
+            }
+
+            //MessageBox.Show(final);
+
+            if (_bitmapSource == negativeFilterImage)  // negative
+                negativeFilterImage = FromArrayToImage(array);
+
+            else if (_bitmapSource == blacknWhiteFilterImage)  // black and white
+                blacknWhiteFilterImage = FromArrayToImage(array);
+        }
+
+
+        // BLUR
         private void CreateFilter_Blur(byte[,] array, byte[] original)
         {
             byte neighborAverage = 0;
@@ -213,95 +305,6 @@ namespace Magasin_De_Photo
             return (int)average;
         }
 
-        private void CreateFilter_Negative (byte[] array)
-        {
-            for (int x = 0; x < array.Length; x++)
-                array[x] = (byte)(255 - array[x]);
-
-            negativeFilterImage = FromArrayToImage(array);
-        }
-
-        private void CreateFilter_BlacknWhite (byte[] array)
-        {
-            // 0.299 * R + 0.587 * G + 0.114 * B
-
-            float BlueRatio = 0.114f;
-            float GreenRatio = 0.587f;
-            float RedRatio = 0.229f;
-
-            int colorState = 0;
-            int rowState = 0;
-            int waitState = 0;
-
-            int offsetLength = 0;
-            
-            bool WaitingForOffset = false;
-            
-            byte pixelGreyShade = 0;
-
-            //string final = "";
-            
-            for (int x = array.Length - 1; x > 0; x--)
-            {
-                if (array[x] != 0)
-                {
-                    break;
-                }
-
-                offsetLength++;
-            }
-
-            for (int x = 0; x < array.Length; x++)
-            {
-                if (WaitingForOffset == true)
-                {
-                    //final += array[x] + ".";
-
-                    waitState++;
-
-                    if (waitState >= offsetLength)
-                    {
-                        colorState = 0;
-                        rowState = 0;
-                        waitState = 0;
-
-                        WaitingForOffset = false;
-                        //final += " - ";
-                    }
-                }
-                else
-                {
-                    if (colorState == 0)
-                        pixelGreyShade = (byte)(RedRatio * array[x] + GreenRatio * array[x+1] + BlueRatio * array[x+2]);
-                
-                    array[x] = pixelGreyShade;
-                    
-
-                    if (colorState == 3)
-                        array[x] = 255;
-
-                    colorState++;
-                    rowState++;
-
-                    //final += array[x] + ".";
-                    
-                    if (colorState > 3)
-                    {
-                        colorState = 0;
-                        //final +=  " - ";
-                    }
-
-                    if (rowState >= noFilterImage.PixelWidth * 4)
-                        WaitingForOffset = true;
-                }
-
-            }
-
-            //MessageBox.Show(final);
-
-            blacknWhiteFilterImage = FromArrayToImage(array);
-        }
-
         private byte[,] FromOneToTwoDimesionsArray(byte[] oneDimension)
         {
             int width = noFilterImage.PixelWidth*3, height = noFilterImage.PixelHeight, index;
@@ -338,6 +341,8 @@ namespace Magasin_De_Photo
 
             return original;
         }
+        // BLUR
+
 
         private void SaveFile(object sender, RoutedEventArgs e)
         {

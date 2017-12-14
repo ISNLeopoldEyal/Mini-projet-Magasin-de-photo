@@ -52,17 +52,17 @@
                 </StackPanel>
             </Button>
             <Separator Background="#555"/>
-            <Button Name="filter3" Width="70" Click="DisplayBlur">
-                <StackPanel>
-                    <Image Name="blur_filter_preview"/>
-                    <Label Content="Flou" HorizontalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-            <Separator Background="#555"/>
             <Button Name="filter4" Width="70" Click="DisplayBlacknWhite">
                 <StackPanel>
                     <Image Name="blacknwhite_filter_preview"/>
                     <Label Content="N&amp;B" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Separator Background="#555"/>
+            <Button Name="filter3" Width="70" Click="DisplayBlur">
+                <StackPanel>
+                    <Image Name="blur_filter_preview"/>
+                    <Label Content="Flou" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
             <Separator Background="#555"/>
