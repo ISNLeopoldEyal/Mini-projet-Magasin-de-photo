@@ -73,6 +73,7 @@
                 </StackPanel>
             </Button>
         </ToolBar>
+        
         <Image Name="display_image" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,70,80,5"/>
     </Grid>
 </Window>
