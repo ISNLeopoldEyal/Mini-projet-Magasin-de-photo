@@ -66,8 +66,10 @@ namespace Magasin_De_Photo
             MessageBox.Show(final);
         }
 
-        private BitmapSource FromArrayToImage(byte[] pixels)
+        private BitmapSource FromArrayToImage(byte[,] twoDimsPixels, byte[] original)
         {
+            byte[] pixels = FromTwoToOneDimension(twoDimsPixels,original);
+
             int width = noFilterImage.PixelWidth,
                 height = noFilterImage.PixelHeight,
                 stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
@@ -144,104 +146,33 @@ namespace Magasin_De_Photo
 
         private void CreateAllFilters (byte[] array)
         {
-            byte[,] twoDim = FromOneToTwoDimensionsArray(array);
-            array = FromTwoToOneDimension(twoDim, array);
+            byte[,] twoDims = FromOneToTwoDimensionsArray(array);
 
-            ApplyFilterToArray((byte[])array.Clone() , negativeFilterImage);
-            ApplyFilterToArray((byte[])array.Clone() , blacknWhiteFilterImage);
+            ApplyFilterTo2DArray_BlacknWhite((byte[,])twoDims.Clone() , (byte[])array.Clone());
 
-            CreateFilter_Blur((byte[,])twoDim.Clone(), (byte[])array.Clone());
+            CreateFilter_Blur((byte[,])twoDims.Clone(), (byte[])array.Clone());
         }
         
-        private void ApplyFilterToArray (byte[] array, BitmapSource _bitmapSource)
+        private void ApplyFilterTo2DArray_BlacknWhite (byte[,] twoDims , byte[] original)
         {
-            int colorState = 0;
-            int rowState = 0;
-            int waitState = 0;
-
-            int offsetLength = 0;
             
-            bool WaitingForOffset = false;
 
+            float BlueRatio = 0.114f, GreenRatio = 0.587f, RedRatio = 0.229f;
 
-            // NEGATIVE FILTER
-            byte filtersPixelColor_Negative = 0;
-
-            // BLACK AND WHITE FILTER
-            byte filtersPixelColor_BlacknWhite= 0;
-
-            float BlueRatio = 0.114f;
-            float GreenRatio = 0.587f;
-            float RedRatio = 0.229f;
-
-
-            //string final = "";
-
-            for (int x = array.Length - 1; x > 0; x--)
+            byte greyScale;
+            
+            for (int y = 0; y < twoDims.GetLength(1); y++)
             {
-                if (array[x] != 0)
-                    break;
-
-                offsetLength++;
-            }
-
-            for (int x = 0; x < array.Length; x++)
-            {
-                if (WaitingForOffset == true)
+                for (int x = 0; x < twoDims.GetLength(0); x+=3)
                 {
-                    //final += array[x] + ".";
+                    greyScale = (byte)(RedRatio * twoDims[x,y] + GreenRatio * twoDims[x+1, y] + BlueRatio * twoDims[x+2, y]);
 
-                    waitState++;
-
-                    if (waitState >= offsetLength)
-                    {
-                        colorState = 0;
-                        rowState = 0;
-                        waitState = 0;
-
-                        WaitingForOffset = false;
-                    }
+                    twoDims[x, y] = greyScale;
+                    twoDims[x+1, y] = greyScale;
+                    twoDims[x+2, y] = greyScale;
                 }
-                else
-                {
-                    // WORK OUT COLOR
-                    filtersPixelColor_Negative = (byte)(255 - array[x]);
-
-                    if (colorState == 0)
-                        filtersPixelColor_BlacknWhite = (byte)(RedRatio * array[x] + GreenRatio * array[x+1] + BlueRatio * array[x+2]);
-
-                    // APPLY
-                    if (_bitmapSource == negativeFilterImage)  // negative
-                        array[x] = filtersPixelColor_Negative;
-
-                    else if (_bitmapSource == blacknWhiteFilterImage)  // black and white
-                        array[x] = filtersPixelColor_BlacknWhite;
-                    
-
-                    if (colorState == 3)
-                        array[x] = 255;
-
-                    colorState++;
-                    rowState++;
-
-                    //final += array[x] + ".";
-                    
-                    if (colorState > 3)
-                        colorState = 0;
-
-                    if (rowState >= noFilterImage.PixelWidth * 4)
-                        WaitingForOffset = true;
-                }
-
             }
-
-            //MessageBox.Show(final);
-
-            if (_bitmapSource == negativeFilterImage)  // negative
-                negativeFilterImage = FromArrayToImage(array);
-
-            else if (_bitmapSource == blacknWhiteFilterImage)  // black and white
-                blacknWhiteFilterImage = FromArrayToImage(array);
+            blacknWhiteFilterImage = FromArrayToImage(twoDims , original);
         }
 
 
@@ -259,7 +190,7 @@ namespace Magasin_De_Photo
             }
 
             original = FromTwoToOneDimension(array, original);
-            blurFilterImage = FromArrayToImage(original);
+            blurFilterImage = FromArrayToImage(array , original);
         }
 
         private int GetNeighborAverage(byte[,] array, int x, int y)
