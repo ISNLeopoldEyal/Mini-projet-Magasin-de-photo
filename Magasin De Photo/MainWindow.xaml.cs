@@ -427,6 +427,10 @@ namespace Magasin_De_Photo
         private void CloseImage(object sender, RoutedEventArgs e)
         {
             display_image.Source = null;
+            no_filter_preview.Source = null;
+            negative_filter_preview.Source = null;
+            blur_filter_preview.Source = null;
+            blacknwhite_filter_preview.Source = null;
             openedFileUri = "";
             openedFileName = null;
             noFilterImage = null;
