@@ -144,7 +144,7 @@ namespace Magasin_De_Photo
 
         private void CreateAllFilters (byte[] array)
         {
-            byte[,] twoDim = FromOneToTwoDimesionsArray(array);
+            byte[,] twoDim = FromOneToTwoDimensionsArray(array);
             array = FromTwoToOneDimension(twoDim, array);
 
             ApplyFilterToArray((byte[])array.Clone() , negativeFilterImage);
@@ -305,17 +305,29 @@ namespace Magasin_De_Photo
             return (int)average;
         }
 
-        private byte[,] FromOneToTwoDimesionsArray(byte[] oneDimension)
+        private byte[,] FromOneToTwoDimensionsArray(byte[] oneDimension)
         {
-            int width = noFilterImage.PixelWidth*3, height = noFilterImage.PixelHeight, index;
+            int width = noFilterImage.PixelWidth*3,
+                height = noFilterImage.PixelHeight,
+                index = 0,
+                offset = OffsetComputation(oneDimension),
+                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+                reelWidth = noFilterImage.PixelWidth * 4 + offset;
+
             byte[,] twoDimensions = new byte[width,height];
 
             for(int y = 0; y < height; y++)
             {
                 for(int x = 0; x < width; x++)
                 {
-                    index = width * y + x;
                     twoDimensions[x, y] = oneDimension[index];
+
+                    index++;
+
+                    if ((index + 1) % 4 == 0)
+                        index++;
+                    if (index == reelWidthNoOffset+(reelWidth*y))
+                        index += offset;
                     //MessageBox.Show(x + "," + y +" : "+ twoDimensions[x, y], "On index : " + index);
                 }
             }
@@ -325,24 +337,45 @@ namespace Magasin_De_Photo
 
         private byte[] FromTwoToOneDimension (byte[,] twoDimensions, byte[] original)
         {
-            int width = noFilterImage.PixelWidth*3, height = noFilterImage.PixelHeight, x = 0, y = 0;
+            int width = noFilterImage.PixelWidth*3,
+                height = noFilterImage.PixelHeight,
+                index = 0,
+                offset = OffsetComputation(original),
+                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+                reelWidth = noFilterImage.PixelWidth * 4 + offset;
 
-            for(int index = 0; index < width*height; index++)
+            for (int y = 0; y < height; y++)
             {
-                original[index] = twoDimensions[x, y];
-                //MessageBox.Show(index + " : " + original[index], "On index : "+ x + "," + y);
-                x++;
-                if(x == width)
+                for (int x = 0; x < width; x++)
                 {
-                    x = 0;
-                    y++;
+                    original[index] = twoDimensions[x, y];
+
+                    index++;
+
+                    if ((index + 1) % 4 == 0)
+                        index++;
+                    if (index == reelWidthNoOffset + (reelWidth * y))
+                        index += offset;
+                    //MessageBox.Show(index + " : " + original[index], "On index : "+ x + "," + y);
                 }
             }
 
             return original;
         }
-        // BLUR
 
+        private int OffsetComputation(byte[] array)
+        {
+            int offsetLength = 0;
+            for (int x = array.Length - 1; x > 0; x--)
+            {
+                if (array[x] != 0)
+                    break;
+
+                offsetLength++;
+            }
+            
+            return offsetLength;
+        }
 
         private void SaveFile(object sender, RoutedEventArgs e)
         {
