@@ -67,10 +67,8 @@ namespace Magasin_De_Photo
             MessageBox.Show(final);
         }
 
-        private BitmapSource FromArrayToImage(byte[,] twoDimsPixels)
+        private BitmapSource FromArrayToImage(byte[] pixels)
         {
-            byte[] pixels = FromTwoToOneDimension(twoDimsPixels);
-
             int width = noFilterImage.PixelWidth,
                 height = noFilterImage.PixelHeight,
                 stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
@@ -147,64 +145,74 @@ namespace Magasin_De_Photo
 
         private void CreateAllFilters()
         {
-            byte[,] twoDims = FromOneToTwoDimensionsArray();
-
-            CreateFilter_Negative((byte[,])twoDims.Clone());
-            CreateFilter_BlacknWhite((byte[,])twoDims.Clone());
-
-            CreateFilter_Blur((byte[,])twoDims.Clone());
+            CreateFilter_Negative();
+            CreateFilter_BlacknWhite();
+            //CreateFilter_Blur();
         }
 
-        private void CreateFilter_Negative(byte[,] twoDims)
+        private void CreateFilter_Negative()
         {
-            for (int y = 0; y < twoDims.GetLength(1); y++)
+            byte[] array = (byte[])allPixels.Clone();
+
+            int width = noFilterImage.PixelWidth * 3,
+                height = noFilterImage.PixelHeight,
+                offset = OffsetComputation(allPixels),
+                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+                reelWidth = noFilterImage.PixelWidth * 4 + offset;
+
+            for (int index = 0; index < array.Length; index++)
             {
-                for (int x = 0; x < twoDims.GetLength(0); x++)
-                {
-                    twoDims[x, y] = (byte)(255 - twoDims[x, y]);
-                }
+                //if (index % 4 == 3)
+                //    index++;
+                //if (index % reelWidth == reelWidthNoOffset)
+                //{
+                //    index += offset;
+                //    if (index >= array.Length)
+                //        break;
+                //}
+
+               array[index] = (byte)(255 - array[index]);
             }
 
-            negativeFilterImage = FromArrayToImage(twoDims);
+            //DebugDisplayBits(array);
+            negativeFilterImage = FromArrayToImage(array);
         }
 
-        private void CreateFilter_BlacknWhite(byte[,] twoDims)
+        private void CreateFilter_BlacknWhite()
         {
             float BlueRatio = 0.114f, GreenRatio = 0.587f, RedRatio = 0.299f;
 
+            int width = noFilterImage.PixelWidth * 3,
+                height = noFilterImage.PixelHeight,
+                offset = OffsetComputation(allPixels),
+                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+                reelWidth = noFilterImage.PixelWidth * 4 + offset;
+
+            byte[] array = (byte[])allPixels.Clone();
             byte greyScale;
             
-            for (int y = 0; y < twoDims.GetLength(1); y++)
+            for (int index = 0; index < array.Length; index+=4)
             {
-                for (int x = 0; x < twoDims.GetLength(0); x+=3)
+                if (index % reelWidth == reelWidthNoOffset)
                 {
-                    //greyScale = 50;
-
-                    greyScale = (byte)(RedRatio * twoDims[x,y] + GreenRatio * twoDims[x+1, y] + BlueRatio * twoDims[x+2, y]);
-                    
-                    twoDims[x, y] = greyScale;
-                    twoDims[x+1, y] = greyScale;
-                    twoDims[x+2, y] = greyScale;
-                    
+                    index += offset;
+                    if (index >= array.Length)
+                        break;
                 }
+
+                greyScale = (byte)(RedRatio * array[index] + GreenRatio * array[index+1] + BlueRatio * array[index+2]);
+
+                array[index] = greyScale;
+                array[index + 1] = greyScale;
+                array[index + 2] = greyScale;
             }
-            blacknWhiteFilterImage = FromArrayToImage(twoDims);
+
+            blacknWhiteFilterImage = FromArrayToImage(array);
         }
 
         // BLUR
         private void CreateFilter_Blur(byte[,] array)
         {
-            byte neighborAverage = 0;
-            for(int y = 0; y < array.GetLength(1); y++)
-            {
-                for(int x = 0; x < array.GetLength(0); x++)
-                {
-                    neighborAverage = (byte)GetNeighborAverage(array, x, y);
-                    array[x, y] = neighborAverage;
-                }
-            }
-            
-            blurFilterImage = FromArrayToImage(array);
         }
 
         private int GetNeighborAverage(byte[,] array, int x, int y)
@@ -386,30 +394,27 @@ namespace Magasin_De_Photo
             blacknWhiteFilterImage = null;
         }
 
-        private byte[,] DebugDisplayBits(byte[] bitArray)
+        private void DebugDisplayBits(byte[] bitArray)
         {
-            int arrayWidth = noFilterImage.PixelWidth * 3,
-                arrayHeight = noFilterImage.PixelHeight,
-                index = 0;
-            byte[,] twoDimensionnalArray = new byte[arrayWidth, arrayHeight];
-            byte one, two, three;
+            int width = noFilterImage.PixelWidth * 3,
+                height = noFilterImage.PixelHeight,
+                offset = OffsetComputation(allPixels),
+                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+                reelWidth = noFilterImage.PixelWidth * 4 + offset;
 
+            string output = "";
 
-            for (int b = 0; b < arrayHeight - 1; b++)
+            for(int index = 3; index < bitArray.Length; index += 4)
             {
-                for (int a = 0; a < arrayWidth - 1; a += 3)
+                if (index % reelWidth == reelWidthNoOffset)
                 {
-                    twoDimensionnalArray[a, b] = bitArray[index];
-                    twoDimensionnalArray[a + 1, b] = bitArray[index + 1];
-                    twoDimensionnalArray[a + 2, b] = bitArray[index + 2];
-                    one = twoDimensionnalArray[a, b];
-                    two = twoDimensionnalArray[a + 1, b];
-                    three = twoDimensionnalArray[a + 2, b];
-                    index += 3;
-                    MessageBox.Show(one.ToString() + "," + two.ToString() + "," + three.ToString(), a + "," + b);
+                    index += offset;
+                    if (index >= bitArray.Length)
+                        break;
                 }
+                output += bitArray[index] + " - ";
             }
-            return twoDimensionnalArray;
+            MessageBox.Show(output);
         }
     }
 }
