@@ -147,31 +147,25 @@ namespace Magasin_De_Photo
         {
             CreateFilter_Negative();
             CreateFilter_BlacknWhite();
-            //CreateFilter_Blur();
+            CreateFilter_Blur();
         }
 
         private void CreateFilter_Negative()
         {
             byte[] array = (byte[])allPixels.Clone();
 
-            int width = noFilterImage.PixelWidth * 3,
-                height = noFilterImage.PixelHeight,
-                offset = OffsetComputation(allPixels),
+            int offset = OffsetComputation(allPixels),
                 reelWidthNoOffset = noFilterImage.PixelWidth * 4,
                 reelWidth = noFilterImage.PixelWidth * 4 + offset;
 
-            for (int index = 0; index < array.Length; index++)
+            for (int index = 0; index < array.Length; index+=4)
             {
-                //if (index % 4 == 3)
-                //    index++;
-                //if (index % reelWidth == reelWidthNoOffset)
-                //{
-                //    index += offset;
-                //    if (index >= array.Length)
-                //        break;
-                //}
-
                array[index] = (byte)(255 - array[index]);
+               array[index + 1] = (byte)(255 - array[index + 1]);
+               array[index + 2] = (byte)(255 - array[index + 2]);
+
+                if (index % reelWidth == reelWidthNoOffset)
+                    index += offset;
             }
 
             //DebugDisplayBits(array);
@@ -182,9 +176,7 @@ namespace Magasin_De_Photo
         {
             float BlueRatio = 0.114f, GreenRatio = 0.587f, RedRatio = 0.299f;
 
-            int width = noFilterImage.PixelWidth * 3,
-                height = noFilterImage.PixelHeight,
-                offset = OffsetComputation(allPixels),
+            int offset = OffsetComputation(allPixels),
                 reelWidthNoOffset = noFilterImage.PixelWidth * 4,
                 reelWidth = noFilterImage.PixelWidth * 4 + offset;
 
@@ -193,64 +185,129 @@ namespace Magasin_De_Photo
             
             for (int index = 0; index < array.Length; index+=4)
             {
-                if (index % reelWidth == reelWidthNoOffset)
-                {
-                    index += offset;
-                    if (index >= array.Length)
-                        break;
-                }
-
                 greyScale = (byte)(RedRatio * array[index] + GreenRatio * array[index+1] + BlueRatio * array[index+2]);
 
                 array[index] = greyScale;
                 array[index + 1] = greyScale;
                 array[index + 2] = greyScale;
+
+                if (index % reelWidth == reelWidthNoOffset)
+                    index += offset;
             }
 
             blacknWhiteFilterImage = FromArrayToImage(array);
         }
 
-        // BLUR
-        private void CreateFilter_Blur(byte[,] array)
+
+        private void CreateFilter_Blur()
         {
+            int average,
+                offset = OffsetComputation(allPixels),
+                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+                reelWidth = noFilterImage.PixelWidth * 4 + offset;
+
+            byte[] array = (byte[])allPixels.Clone();
+
+            for (int index = 0; index < array.Length; index+=4)
+            {
+                average = GetNeighborAverage(array, index);
+                array[index] = (byte)average;
+
+                average = GetNeighborAverage(array, index + 1);
+                array[index + 1] = (byte)average;
+                
+                average = GetNeighborAverage(array, index + 2);
+                array[index + 2] = (byte)average;
+
+                if (index % reelWidth == reelWidthNoOffset)
+                    index += offset;
+            }
+
+            blurFilterImage = FromArrayToImage(array);
         }
 
-        private int GetNeighborAverage(byte[,] array, int x, int y)
+        private int GetNeighborAverage(byte[] array, int index)
         {
-            double numbersInSum = 0,
-                sum = array[x,y],
-                xMax = array.GetLength(0) - 1,
-                yMax = array.GetLength(1) - 1,
+            double numbersInSum = 1,
+                sum = array[index],
                 average;
+            
+            int offset = OffsetComputation(allPixels),
+                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+                reelWidth = noFilterImage.PixelWidth * 4 + offset,
+                indexMax = array.Length - 1;
 
-            if (x > 0)
+            bool leftClose     = index % reelWidth > 4,
+                 upClose       = index - reelWidth > 0,
+                 rightClose    = index % reelWidth < reelWidthNoOffset - 4,
+                 downClose     = index + reelWidth < indexMax,
+                 upLeftNext    = upClose && leftClose,
+                 upRightNext   = upClose && rightClose,
+                 downLeftNext  = downClose && leftClose,
+                 downRightNext = downClose && rightClose,
+                 leftNext      = index % reelWidth > 8,
+                 rightNext     = index % reelWidth < reelWidthNoOffset - 8,
+                 upNext        = index - 2*reelWidth > 0,
+                 downNext      = index + 2*reelWidth < indexMax;
+
+            if (leftClose)
             {
-                sum += array[x - 1, y];
+                sum += array[index - 4];
                 numbersInSum++;
             }
-            if (y > 0)
+            if (upClose)
             {
-                sum += array[x, y - 1];
+                sum += array[index-reelWidth];
                 numbersInSum++;
             }
-            if (x > 0 && y > 0)
+            if (rightClose)
             {
-                sum += array[x - 1, y - 1];
+                sum += array[index + 4];
                 numbersInSum++;
             }
-            if (x < xMax)
+            if (downClose)
             {
-                sum += array[x + 1, y];
+                sum += array[index + reelWidth];
                 numbersInSum++;
             }
-            if (y < yMax)
+            if (upLeftNext)
             {
-                sum += array[x, y + 1];
+                sum += array[index - reelWidth - 4];
                 numbersInSum++;
             }
-            if (x < xMax && y < yMax)
+            if (upRightNext)
             {
-                sum += array[x + 1, y + 1];
+                sum += array[index - reelWidth + 4];
+                numbersInSum++;
+            }
+            if (downLeftNext)
+            {
+                sum += array[index + reelWidth - 4];
+                numbersInSum++;
+            }
+            if (downRightNext)
+            {
+                sum += array[index + reelWidth + 4];
+                numbersInSum++;
+            }
+            if (leftNext)
+            {
+                sum += array[index - 8];
+                numbersInSum++;
+            }
+            if (upNext)
+            {
+                sum += array[index - 2*reelWidth];
+                numbersInSum++;
+            }
+            if (rightNext)
+            {
+                sum += array[index + 8];
+                numbersInSum++;
+            }
+            if (downNext)
+            {
+                sum += array[index + 2*reelWidth];
                 numbersInSum++;
             }
 
@@ -258,65 +315,65 @@ namespace Magasin_De_Photo
             return (int)average;
         }
 
-        private byte[,] FromOneToTwoDimensionsArray()
-        {
-            int width = noFilterImage.PixelWidth*3,
-                height = noFilterImage.PixelHeight,
-                index = 0,
-                offset = OffsetComputation(allPixels),
-                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                reelWidth = noFilterImage.PixelWidth * 4 + offset;
-
-            byte[,] twoDimensions = new byte[width,height];
-
-            for(int y = 0; y < height; y++)
-            {
-                for(int x = 0; x < width; x++)
-                {
-                    twoDimensions[x, y] = allPixels[index];
-
-                    index++;
-
-                    if ((index + 1) % 4 == 0)
-                        index++;
-                    if (index == reelWidthNoOffset+(reelWidth*y))
-                        index += offset;
-                    //MessageBox.Show(x + "," + y +" : "+ twoDimensions[x, y], "On index : " + index);
-                }
-            }
-
-            return twoDimensions;
-        }
-
-        private byte[] FromTwoToOneDimension (byte[,] twoDimensions)
-        {
-            int width = twoDimensions.GetLength(0),
-                height = twoDimensions.GetLength(1),
-                index = 0,
-                offset = OffsetComputation(allPixels),
-                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                reelWidth = noFilterImage.PixelWidth * 4 + offset;
-
-            byte[] array = (byte[])allPixels.Clone();
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    array[index] = twoDimensions[x, y];
-
-                    index++;
-
-                    if ((index + 1) % 4 == 0)
-                        index++;
-                    if (x == width - 1)
-                        index += offset;
-                    //MessageBox.Show(index + " : " + original[index], "On index : "+ x + "," + y);
-                }
-            }
-
-            return array;
-        }
+        //private byte[,] FromOneToTwoDimensionsArray()
+        //{
+        //    int width = noFilterImage.PixelWidth*3,
+        //        height = noFilterImage.PixelHeight,
+        //        index = 0,
+        //        offset = OffsetComputation(allPixels),
+        //        reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+        //        reelWidth = noFilterImage.PixelWidth * 4 + offset;
+        //
+        //    byte[,] twoDimensions = new byte[width,height];
+        //
+        //    for(int y = 0; y < height; y++)
+        //    {
+        //        for(int x = 0; x < width; x++)
+        //        {
+        //            twoDimensions[x, y] = allPixels[index];
+        //
+        //            index++;
+        //
+        //            if ((index + 1) % 4 == 0)
+        //                index++;
+        //            if (index == reelWidthNoOffset+(reelWidth*y))
+        //                index += offset;
+        //            //MessageBox.Show(x + "," + y +" : "+ twoDimensions[x, y], "On index : " + index);
+        //        }
+        //    }
+        //
+        //    return twoDimensions;
+        //}
+        //
+        //private byte[] FromTwoToOneDimension (byte[,] twoDimensions)
+        //{
+        //    int width = twoDimensions.GetLength(0),
+        //        height = twoDimensions.GetLength(1),
+        //        index = 0,
+        //        offset = OffsetComputation(allPixels),
+        //        reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+        //        reelWidth = noFilterImage.PixelWidth * 4 + offset;
+        //
+        //    byte[] array = (byte[])allPixels.Clone();
+        //
+        //    for (int y = 0; y < height; y++)
+        //    {
+        //        for (int x = 0; x < width; x++)
+        //        {
+        //            array[index] = twoDimensions[x, y];
+        //
+        //            index++;
+        //
+        //            if ((index + 1) % 4 == 0)
+        //                index++;
+        //            if (x == width - 1)
+        //                index += offset;
+        //            //MessageBox.Show(index + " : " + original[index], "On index : "+ x + "," + y);
+        //        }
+        //    }
+        //
+        //    return array;
+        //}
 
         private int OffsetComputation(byte[] array)
         {
@@ -334,20 +391,42 @@ namespace Magasin_De_Photo
 
         private void SaveFile(object sender, RoutedEventArgs e)
         {
-            //if (display_image.Source != null)
-            //{
-            //    SaveActualFile();
-            //}
-            //else { return; }
+            if (display_image.Source != null)
+            {
+                SaveActualFile();
+            }
+            else { return; }
         }
 
         private void SaveActualFile()
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
-                FileName = openedFileUri
+                FileName = ChangeName()
             };
-            File.Replace(openedFileUri, openedFileUri, null);
+
+            BitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
+            ///encoder.Frames.Add(BitmapFrame.Create(new Uri(openedFileUri)));
+            using (var stream = saveFileDialog.OpenFile())
+            {
+                encoder.Save(stream);
+            }
+        }
+
+        private string ChangeName()
+        {
+            string fileName = openedFileUri;
+            int extensionStart = openedFileUri.Length - 4;
+
+            if (display_image.Source == negativeFilterImage)
+                fileName = fileName.Insert(extensionStart, " - Negatif");
+            if (display_image.Source == blacknWhiteFilterImage)
+                fileName = fileName.Insert(extensionStart, " - Niveau De Gris");
+            if (display_image.Source == blurFilterImage)
+                fileName = fileName.Insert(extensionStart, " - FLou");
+
+            return fileName;
         }
 
         private void SaveAsFileFromDialog(object sender, RoutedEventArgs e)

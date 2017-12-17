@@ -104,5 +104,11 @@
   <ItemGroup>
     <Resource Include="Images\rubik%27s cube.bmp" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\ne pas sauvegarder celui-là.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\rubik%27s cube - Copy.bmp" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
