@@ -127,6 +127,7 @@ namespace Magasin_De_Photo
             if (openFileDialog.ShowDialog() == true)
             {
                 openedFileUri = openFileDialog.FileName;
+                openedFileName = openFileDialog.SafeFileName;
 
                 BitmapImage _bmpi = new BitmapImage();
                 _bmpi.BeginInit();
@@ -165,7 +166,7 @@ namespace Magasin_De_Photo
                array[index + 2] = (byte)(255 - array[index + 2]);
 
                 if (index % reelWidth == reelWidthNoOffset)
-                    index += offset;
+                    index += (offset - 4);
             }
 
             //DebugDisplayBits(array);
@@ -192,7 +193,7 @@ namespace Magasin_De_Photo
                 array[index + 2] = greyScale;
 
                 if (index % reelWidth == reelWidthNoOffset)
-                    index += offset;
+                    index += (offset - 4);
             }
 
             blacknWhiteFilterImage = FromArrayToImage(array);
@@ -220,7 +221,7 @@ namespace Magasin_De_Photo
                 array[index + 2] = (byte)average;
 
                 if (index % reelWidth == reelWidthNoOffset)
-                    index += offset;
+                    index += (offset - 4);
             }
 
             blurFilterImage = FromArrayToImage(array);
@@ -314,6 +315,104 @@ namespace Magasin_De_Photo
             average = Math.Round(sum / numbersInSum);
             return (int)average;
         }
+        private int OffsetComputation(byte[] array)
+        {
+            int offsetLength = 0;
+            for (int x = array.Length - 1; x > 0; x--)
+            {
+                if (array[x] != 0)
+                    break;
+
+                offsetLength++;
+            }
+            
+            return offsetLength;
+        }
+
+        private void SaveFile(object sender, RoutedEventArgs e)
+        {
+            if (display_image.Source != null)
+            {
+                SaveActualFile();
+            }
+            else { return; }
+        }
+
+        private void SaveActualFile()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                FileName = openedFileUri
+            };
+
+            BitmapEncoder encoder = new PngBitmapEncoder();
+
+            encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
+            using (var stream = saveFileDialog.OpenFile())
+            {
+                encoder.Save(stream);
+            }
+        }
+
+        private string ChangeName()
+        {
+            string fileName = openedFileName;
+            int extensionStart = openedFileName.Length - 4;
+
+            if (display_image.Source == negativeFilterImage)
+                fileName = fileName.Insert(extensionStart, " - Negatif");
+            if (display_image.Source == blacknWhiteFilterImage)
+                fileName = fileName.Insert(extensionStart, " - Niveau De Gris");
+            if (display_image.Source == blurFilterImage)
+                fileName = fileName.Insert(extensionStart, " - FLou");
+
+            return fileName;
+        }
+
+        private void SaveAsFileFromDialog(object sender, RoutedEventArgs e)
+        {
+            if (display_image.Source != null)
+            {
+                SaveAsFile();
+            }
+            else
+                return;
+        }
+
+        private void SaveAsFile()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                DefaultExt = ".bmp",
+                Filter = "BMP Files (*.bmp)|*.bmp",
+                FileName = ChangeName()
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                BitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
+                using (var stream = saveFileDialog.OpenFile())
+                {
+                    encoder.Save(stream);
+                }
+            }
+        }
+
+        private void CloseImage(object sender, RoutedEventArgs e)
+        {
+            display_image.Source = null;
+            no_filter_preview.Source = null;
+            negative_filter_preview.Source = null;
+            blur_filter_preview.Source = null;
+            blacknwhite_filter_preview.Source = null;
+            openedFileUri = "";
+            openedFileName = null;
+            noFilterImage = null;
+            negativeFilterImage = null;
+            blurFilterImage = null;
+            blacknWhiteFilterImage = null;
+        }
 
         //private byte[,] FromOneToTwoDimensionsArray()
         //{
@@ -374,126 +473,28 @@ namespace Magasin_De_Photo
         //
         //    return array;
         //}
-
-        private int OffsetComputation(byte[] array)
-        {
-            int offsetLength = 0;
-            for (int x = array.Length - 1; x > 0; x--)
-            {
-                if (array[x] != 0)
-                    break;
-
-                offsetLength++;
-            }
-            
-            return offsetLength;
-        }
-
-        private void SaveFile(object sender, RoutedEventArgs e)
-        {
-            if (display_image.Source != null)
-            {
-                SaveActualFile();
-            }
-            else { return; }
-        }
-
-        private void SaveActualFile()
-        {
-            SaveFileDialog saveFileDialog = new SaveFileDialog
-            {
-                FileName = ChangeName()
-            };
-
-            BitmapEncoder encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
-            ///encoder.Frames.Add(BitmapFrame.Create(new Uri(openedFileUri)));
-            using (var stream = saveFileDialog.OpenFile())
-            {
-                encoder.Save(stream);
-            }
-        }
-
-        private string ChangeName()
-        {
-            string fileName = openedFileUri;
-            int extensionStart = openedFileUri.Length - 4;
-
-            if (display_image.Source == negativeFilterImage)
-                fileName = fileName.Insert(extensionStart, " - Negatif");
-            if (display_image.Source == blacknWhiteFilterImage)
-                fileName = fileName.Insert(extensionStart, " - Niveau De Gris");
-            if (display_image.Source == blurFilterImage)
-                fileName = fileName.Insert(extensionStart, " - FLou");
-
-            return fileName;
-        }
-
-        private void SaveAsFileFromDialog(object sender, RoutedEventArgs e)
-        {
-            if (display_image.Source != null)
-            {
-                SaveAsFile();
-            }
-            else { return; }
-        }
-
-        private void SaveAsFile()
-        {
-            SaveFileDialog saveFileDialog = new SaveFileDialog
-            {
-                DefaultExt = ".bmp",
-                Filter = "BMP Files (*.bmp)|*.bmp"
-            };
-
-            if (saveFileDialog.ShowDialog() == true)
-            {
-                BitmapEncoder encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
-                ///encoder.Frames.Add(BitmapFrame.Create(new Uri(openedFileUri)));
-                using (var stream = saveFileDialog.OpenFile())
-                {
-                    encoder.Save(stream);
-                }
-            }
-        }
-
-        private void CloseImage(object sender, RoutedEventArgs e)
-        {
-            display_image.Source = null;
-            no_filter_preview.Source = null;
-            negative_filter_preview.Source = null;
-            blur_filter_preview.Source = null;
-            blacknwhite_filter_preview.Source = null;
-            openedFileUri = "";
-            openedFileName = null;
-            noFilterImage = null;
-            negativeFilterImage = null;
-            blurFilterImage = null;
-            blacknWhiteFilterImage = null;
-        }
-
-        private void DebugDisplayBits(byte[] bitArray)
-        {
-            int width = noFilterImage.PixelWidth * 3,
-                height = noFilterImage.PixelHeight,
-                offset = OffsetComputation(allPixels),
-                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                reelWidth = noFilterImage.PixelWidth * 4 + offset;
-
-            string output = "";
-
-            for(int index = 3; index < bitArray.Length; index += 4)
-            {
-                if (index % reelWidth == reelWidthNoOffset)
-                {
-                    index += offset;
-                    if (index >= bitArray.Length)
-                        break;
-                }
-                output += bitArray[index] + " - ";
-            }
-            MessageBox.Show(output);
-        }
+        //
+        //private void DebugDisplayBits(byte[] bitArray)
+        //{
+        //    int width = noFilterImage.PixelWidth * 3,
+        //        height = noFilterImage.PixelHeight,
+        //        offset = OffsetComputation(allPixels),
+        //        reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+        //        reelWidth = noFilterImage.PixelWidth * 4 + offset;
+        //
+        //    string output = "";
+        //
+        //    for(int index = 3; index < bitArray.Length; index += 4)
+        //    {
+        //        if (index % reelWidth == reelWidthNoOffset)
+        //        {
+        //            index += offset;
+        //            if (index >= bitArray.Length)
+        //                break;
+        //        }
+        //        output += bitArray[index] + " - ";
+        //    }
+        //    MessageBox.Show(output);
+        //}
     }
 }
