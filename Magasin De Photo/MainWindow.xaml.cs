@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,18 +20,36 @@ namespace Magasin_De_Photo
 {
     public partial class MainWindow : Window
     {
-        static string openedFileUri;
-        static string openedFileName;
-        static BitmapSource noFilterImage = null;
-        static BitmapSource negativeFilterImage = null;
-        static BitmapSource blurFilterImage = null;
-        static BitmapSource blacknWhiteFilterImage = null;
-        static byte[] allPixels;
+        public byte[] allPixels;
+        public BitmapSource noFilterImage = null;
+        public BitmapSource negativeFilterImage = null;
+        public BitmapSource blurFilterImage = null;
+        public BitmapSource blacknWhiteFilterImage = null;
+
+        public int offset, reelWidthNoOffset, reelWidth, width, height, stride;
+        public double dpiX, dpiY;
+        public string openedFileUri;
+        public string openedFileName;
+        public BitmapPalette palette;
+        public PixelFormat format;
+
+        public Thread negatiVeFilterThread;
+        public Thread blacknWhiteFilterThread;
+        public Thread blurFilterThread;
+
 
         public MainWindow()
         {
             InitializeComponent();
             ChangeOrientationOfFiltersTlb();
+
+            negatiVeFilterThread = new Thread(CreateFilter_Negative);
+            blacknWhiteFilterThread = new Thread(CreateFilter_BlacknWhite);
+            blurFilterThread = new Thread(CreateFilter_Blur);
+
+            negatiVeFilterThread.Name = "Thread : Negatif";
+            blacknWhiteFilterThread.Name = "Thread : Niveau de gris";
+            blurFilterThread.Name = "Thread : Flou";
         }
 
         private void ChangeOrientationOfFiltersTlb()
@@ -47,9 +66,7 @@ namespace Magasin_De_Photo
 
         private byte[] GetBitArrayFromImage()
         {
-            int stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
-            byte[] pixels = new byte[(int)noFilterImage.PixelHeight * stride];
-
+            byte[] pixels = new byte[height * stride];
             noFilterImage.CopyPixels(pixels, stride, 0);
             //DebugDisplayBits(pixels);
             //DEBUG_ShowCleanArray(pixels);
@@ -67,21 +84,21 @@ namespace Magasin_De_Photo
             MessageBox.Show(final);
         }
 
-        private BitmapSource FromArrayToImage(byte[] pixels)
+        private void FromArrayToImage(byte[] pixels)
         {
-            int width = noFilterImage.PixelWidth,
-                height = noFilterImage.PixelHeight,
-                stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
+            //int width = noFilterImage.PixelWidth,
+            //    height = noFilterImage.PixelHeight,
+            //    stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
 
-            double dpiX = noFilterImage.DpiX,
-                   dpiY = noFilterImage.DpiY;
+            //double dpiX = noFilterImage.DpiX,
+            //       dpiY = noFilterImage.DpiY;
 
-            PixelFormat format = noFilterImage.Format;
-            BitmapPalette palette = noFilterImage.Palette;
+            //PixelFormat format = noFilterImage.Format;
+            //BitmapPalette palette = noFilterImage.Palette;
 
-            BitmapSource bitmap = BitmapSource.Create(width, height, dpiX, dpiY, format, palette, pixels, stride);
+            //BitmapSource bitmap = BitmapSource.Create(width, height, dpiX, dpiY, format, palette, pixels, stride);
                        
-            return bitmap;
+            //return bitmap;
         }
         
         private void DisplayNoFilter(object sender, RoutedEventArgs e)
@@ -107,124 +124,121 @@ namespace Magasin_De_Photo
             if (blacknWhiteFilterImage != null)
                 display_image.Source = blacknWhiteFilterImage;
         }
-
-        private void SetLayoutPreviews()
-        {
-            no_filter_preview.Source = noFilterImage;
-            negative_filter_preview.Source = negativeFilterImage;
-            blur_filter_preview.Source = blurFilterImage;
-            blacknwhite_filter_preview.Source = blacknWhiteFilterImage;
-        }
-
-        private void OpenImageFromDialog(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog
-            {
-                DefaultExt = ".bmp",
-                Filter = "BMP Files (*.bmp)|*.bmp"
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                openedFileUri = openFileDialog.FileName;
-                openedFileName = openFileDialog.SafeFileName;
-
-                BitmapImage _bmpi = new BitmapImage();
-                _bmpi.BeginInit();
-                _bmpi.CacheOption = BitmapCacheOption.OnLoad;
-                _bmpi.UriSource = new Uri(openedFileUri);
-                _bmpi.EndInit();
-
-                noFilterImage = _bmpi;
-                display_image.Source = noFilterImage;
-                allPixels = GetBitArrayFromImage();
-
-                CreateAllFilters();
-                SetLayoutPreviews();
-            }
-        }
-
+        
         private void CreateAllFilters()
         {
-            CreateFilter_Negative();
-            CreateFilter_BlacknWhite();
-            CreateFilter_Blur();
+            //if(negatiVeFilterThread.IsAlive)
+            //    negatiVeFilterThread.Join();
+            //else
+            //    negatiVeFilterThread.Start();
+            //
+            //if (blacknWhiteFilterThread.IsAlive)
+            //    blacknWhiteFilterThread.Join();
+            //else
+            //    blacknWhiteFilterThread.Start();
+            //
+            //if (blurFilterThread.IsAlive)
+            //    blurFilterThread.Join();
+            //else
+            //    blurFilterThread.Start();
+
+            negatiVeFilterThread.Start();
+
+            blacknWhiteFilterThread.Start();
+            blurFilterThread.Start();
+            //CreateFilter_Negative();
+            //CreateFilter_BlacknWhite();
+            //CreateFilter_Blur();
         }
 
         private void CreateFilter_Negative()
         {
-            byte[] array = (byte[])allPixels.Clone();
+            //Thread.Sleep(500);
 
-            int offset = OffsetComputation(allPixels),
-                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                reelWidth = noFilterImage.PixelWidth * 4 + offset;
-
-            for (int index = 0; index < array.Length; index+=4)
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-               array[index] = (byte)(255 - array[index]);
-               array[index + 1] = (byte)(255 - array[index + 1]);
-               array[index + 2] = (byte)(255 - array[index + 2]);
+                byte[] array = (byte[])allPixels.Clone();
 
-                if (index % reelWidth == reelWidthNoOffset)
-                    index += (offset - 4);
-            }
+                /*int offset = OffsetComputation(allPixels),
+                    reelWidthNoOffset = noFilterImage.PixelWidth * 4,
+                    reelWidth = noFilterImage.PixelWidth * 4 + offset;*/
 
-            //DebugDisplayBits(array);
-            negativeFilterImage = FromArrayToImage(array);
+                for (int index = 0; index < array.Length; index+=4)
+                {
+                   array[index] = (byte)(255 - array[index]);
+                   array[index + 1] = (byte)(255 - array[index + 1]);
+                   array[index + 2] = (byte)(255 - array[index + 2]);
+
+                    if (index % reelWidth == reelWidthNoOffset)
+                        index += (offset - 4);
+                }
+
+                //DebugDisplayBits(array);
+                BitmapSource bitmap = BitmapSource.Create(width, height, dpiX, dpiY, format, palette, array, stride);
+                negativeFilterImage = bitmap;
+                negative_filter_preview.Source = negativeFilterImage;
+                negatiVeFilterThread.Abort();
+            }));
+            Thread.CurrentThread.Abort();
+            negatiVeFilterThread.Abort();
         }
 
         private void CreateFilter_BlacknWhite()
         {
-            float BlueRatio = 0.114f, GreenRatio = 0.587f, RedRatio = 0.299f;
-
-            int offset = OffsetComputation(allPixels),
-                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                reelWidth = noFilterImage.PixelWidth * 4 + offset;
-
-            byte[] array = (byte[])allPixels.Clone();
-            byte greyScale;
-            
-            for (int index = 0; index < array.Length; index+=4)
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                greyScale = (byte)(RedRatio * array[index] + GreenRatio * array[index+1] + BlueRatio * array[index+2]);
+                float BlueRatio = 0.114f, GreenRatio = 0.587f, RedRatio = 0.299f;
 
-                array[index] = greyScale;
-                array[index + 1] = greyScale;
-                array[index + 2] = greyScale;
+                byte[] array = (byte[])allPixels.Clone();
+                byte greyScale;
+                
+                for (int index = 0; index < array.Length; index+=4)
+                {
+                    greyScale = (byte)(RedRatio * array[index] + GreenRatio * array[index+1] + BlueRatio * array[index+2]);
 
-                if (index % reelWidth == reelWidthNoOffset)
-                    index += (offset - 4);
-            }
+                    array[index] = greyScale;
+                    array[index + 1] = greyScale;
+                    array[index + 2] = greyScale;
 
-            blacknWhiteFilterImage = FromArrayToImage(array);
+                    if (index % reelWidth == reelWidthNoOffset)
+                        index += (offset - 4);
+                }
+
+                BitmapSource bitmap = BitmapSource.Create(width, height, dpiX, dpiY, format, palette, array, stride);
+                blacknWhiteFilterImage = bitmap;
+                blacknwhite_filter_preview.Source = blacknWhiteFilterImage;
+            }));
         }
 
 
         private void CreateFilter_Blur()
         {
-            int average,
-                offset = OffsetComputation(allPixels),
-                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                reelWidth = noFilterImage.PixelWidth * 4 + offset;
-
-            byte[] array = (byte[])allPixels.Clone();
-
-            for (int index = 0; index < array.Length; index+=4)
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                average = GetNeighborAverage(array, index);
-                array[index] = (byte)average;
+                int average;
 
-                average = GetNeighborAverage(array, index + 1);
-                array[index + 1] = (byte)average;
+                byte[] array = (byte[])allPixels.Clone();
+
+                for (int index = 0; index < array.Length; index+=4)
+                {
+                    average = GetNeighborAverage(array, index);
+                    array[index] = (byte)average;
+
+                    average = GetNeighborAverage(array, index + 1);
+                    array[index + 1] = (byte)average;
+                    
+                    average = GetNeighborAverage(array, index + 2);
+                    array[index + 2] = (byte)average;
+
+                    if (index % reelWidth == reelWidthNoOffset)
+                        index += (offset - 4);
+                }
+
+                BitmapSource bitmap = BitmapSource.Create(width, height, dpiX, dpiY, format, palette, array, stride);
+                blurFilterImage = bitmap;
                 
-                average = GetNeighborAverage(array, index + 2);
-                array[index + 2] = (byte)average;
-
-                if (index % reelWidth == reelWidthNoOffset)
-                    index += (offset - 4);
-            }
-
-            blurFilterImage = FromArrayToImage(array);
+                blur_filter_preview.Source = blurFilterImage;
+            }));
         }
 
         private int GetNeighborAverage(byte[] array, int index)
@@ -233,9 +247,9 @@ namespace Magasin_De_Photo
                 sum = array[index],
                 average;
             
-            int offset = OffsetComputation(allPixels),
+            int /*offset = OffsetComputation(allPixels),
                 reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                reelWidth = noFilterImage.PixelWidth * 4 + offset,
+                reelWidth = noFilterImage.PixelWidth * 4 + offset,*/
                 indexMax = array.Length - 1;
 
             bool leftClose     = index % reelWidth > 4,
@@ -315,6 +329,23 @@ namespace Magasin_De_Photo
             average = Math.Round(sum / numbersInSum);
             return (int)average;
         }
+
+        private void SetGlobalVariables()
+        {
+            stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
+            width = noFilterImage.PixelWidth;
+            height = noFilterImage.PixelHeight;
+            allPixels = GetBitArrayFromImage();
+
+            offset = OffsetComputation(allPixels);
+            reelWidthNoOffset = noFilterImage.PixelWidth * 4;
+            reelWidth = noFilterImage.PixelWidth * 4 + offset;
+            dpiX = noFilterImage.DpiX;
+            dpiY = noFilterImage.DpiY;
+            format = noFilterImage.Format;
+            palette = noFilterImage.Palette;
+        }
+
         private int OffsetComputation(byte[] array)
         {
             int offsetLength = 0;
@@ -329,28 +360,90 @@ namespace Magasin_De_Photo
             return offsetLength;
         }
 
-        private void SaveFile(object sender, RoutedEventArgs e)
+        private void OpenImage(object sender, RoutedEventArgs e)
         {
-            if (display_image.Source != null)
+            OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                SaveActualFile();
+                DefaultExt = ".bmp",
+                Filter = "BMP Files (*.bmp)|*.bmp"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                openedFileUri = openFileDialog.FileName;
+                openedFileName = openFileDialog.SafeFileName;
+
+                InitImage();
             }
-            else { return; }
         }
 
-        private void SaveActualFile()
+        private void InitImage()
+        {
+            BitmapImage _bmpi = new BitmapImage();
+            _bmpi.BeginInit();
+            _bmpi.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+            _bmpi.CacheOption = BitmapCacheOption.OnLoad;
+            _bmpi.UriSource = new Uri(openedFileUri);
+            _bmpi.EndInit();
+
+            noFilterImage = _bmpi;
+            display_image.Source = noFilterImage;
+            no_filter_preview.Source = noFilterImage;
+
+            SetGlobalVariables();
+            CreateAllFilters();
+            //negatiVeFilterThread.Start();
+        }
+
+        private void SaveImage(object sender, RoutedEventArgs e)
+        {
+            if (display_image.Source != null)
+                SaveActualImage();
+        }
+
+        private void SaveActualImage()
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
                 FileName = openedFileUri
             };
 
-            BitmapEncoder encoder = new PngBitmapEncoder();
-
+            var encoder = new BmpBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
+            //File.Delete(openedFileUri);
             using (var stream = saveFileDialog.OpenFile())
             {
                 encoder.Save(stream);
+            }
+
+            InitImage();
+        }
+
+        private void SaveAsImage(object sender, RoutedEventArgs e)
+        {
+            if (display_image.Source != null)
+                SaveAsImageWithDialog();
+            else
+                return;
+        }
+
+        private void SaveAsImageWithDialog()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                DefaultExt = ".bmp",
+                Filter = "BMP Files (*.bmp)|*.bmp",
+                FileName = ChangeName()
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                var encoder = new BmpBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
+                using (var stream = saveFileDialog.OpenFile())
+                {
+                    encoder.Save(stream);
+                }
             }
         }
 
@@ -367,36 +460,6 @@ namespace Magasin_De_Photo
                 fileName = fileName.Insert(extensionStart, " - FLou");
 
             return fileName;
-        }
-
-        private void SaveAsFileFromDialog(object sender, RoutedEventArgs e)
-        {
-            if (display_image.Source != null)
-            {
-                SaveAsFile();
-            }
-            else
-                return;
-        }
-
-        private void SaveAsFile()
-        {
-            SaveFileDialog saveFileDialog = new SaveFileDialog
-            {
-                DefaultExt = ".bmp",
-                Filter = "BMP Files (*.bmp)|*.bmp",
-                FileName = ChangeName()
-            };
-
-            if (saveFileDialog.ShowDialog() == true)
-            {
-                BitmapEncoder encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
-                using (var stream = saveFileDialog.OpenFile())
-                {
-                    encoder.Save(stream);
-                }
-            }
         }
 
         private void CloseImage(object sender, RoutedEventArgs e)

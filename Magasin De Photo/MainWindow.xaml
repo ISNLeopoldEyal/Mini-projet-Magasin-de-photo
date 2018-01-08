@@ -8,21 +8,21 @@
         Title="Magasin de Photo" Height="600" Width="720">
     <Grid Background="#555">
         <ToolBar VerticalAlignment="Top" HorizontalAlignment="Stretch" Background="#bbb">
-            <Button Name="open_btn" Width="100px" Height="60" Click="OpenImageFromDialog">
+            <Button Name="open_btn" Width="100px" Height="60" Click="OpenImage">
                 <StackPanel>
                     <Image Name="open_folder"  HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\open file.png"/>
                     <Label Content="Open" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
             <Separator Background="#555"/>
-            <Button Name="save_btn" Width="100px" Height="60" Click="SaveFile">
+            <Button Name="save_btn" Width="100px" Height="60" Click="SaveImage">
                 <StackPanel>
                     <Image Name="save_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\save file.png"/>
                     <Label Content="Save" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Button>
             <Separator Background="#555"/>
-            <Button Name="saveas_btn" Width="100px" Height="60" Click="SaveAsFileFromDialog">
+            <Button Name="saveas_btn" Width="100px" Height="60" Click="SaveAsImage">
                 <StackPanel>
                     <Image Name="saveas_file" HorizontalAlignment="Stretch" Width="100" Height="32" Source="Images\save as file.png"/>
                     <Label Content="Save as" HorizontalAlignment="Center"/>
