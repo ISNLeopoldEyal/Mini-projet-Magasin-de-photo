@@ -33,23 +33,10 @@ namespace Magasin_De_Photo
         public BitmapPalette palette;
         public PixelFormat format;
 
-        public Thread negatiVeFilterThread;
-        public Thread blacknWhiteFilterThread;
-        public Thread blurFilterThread;
-
-
         public MainWindow()
         {
             InitializeComponent();
             ChangeOrientationOfFiltersTlb();
-
-            negatiVeFilterThread = new Thread(CreateFilter_Negative);
-            blacknWhiteFilterThread = new Thread(CreateFilter_BlacknWhite);
-            blurFilterThread = new Thread(CreateFilter_Blur);
-
-            negatiVeFilterThread.Name = "Thread : Negatif";
-            blacknWhiteFilterThread.Name = "Thread : Niveau de gris";
-            blurFilterThread.Name = "Thread : Flou";
         }
 
         private void ChangeOrientationOfFiltersTlb()
@@ -127,42 +114,21 @@ namespace Magasin_De_Photo
         
         private void CreateAllFilters()
         {
-            //if(negatiVeFilterThread.IsAlive)
-            //    negatiVeFilterThread.Join();
-            //else
-            //    negatiVeFilterThread.Start();
-            //
-            //if (blacknWhiteFilterThread.IsAlive)
-            //    blacknWhiteFilterThread.Join();
-            //else
-            //    blacknWhiteFilterThread.Start();
-            //
-            //if (blurFilterThread.IsAlive)
-            //    blurFilterThread.Join();
-            //else
-            //    blurFilterThread.Start();
-
+            Thread negatiVeFilterThread = new Thread(CreateFilter_Negative) { Name = "Thread : Negatif" };
+            Thread blacknWhiteFilterThread = new Thread(CreateFilter_BlacknWhite) { Name = "Thread : Niveau de gris" };
+            Thread blurFilterThread = new Thread(CreateFilter_Blur) { Name = "Thread : Flou" };
+            
             negatiVeFilterThread.Start();
-
             blacknWhiteFilterThread.Start();
             blurFilterThread.Start();
-            //CreateFilter_Negative();
-            //CreateFilter_BlacknWhite();
-            //CreateFilter_Blur();
         }
 
         private void CreateFilter_Negative()
         {
-            //Thread.Sleep(500);
-
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 byte[] array = (byte[])allPixels.Clone();
-
-                /*int offset = OffsetComputation(allPixels),
-                    reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                    reelWidth = noFilterImage.PixelWidth * 4 + offset;*/
-
+                
                 for (int index = 0; index < array.Length; index+=4)
                 {
                    array[index] = (byte)(255 - array[index]);
@@ -177,10 +143,7 @@ namespace Magasin_De_Photo
                 BitmapSource bitmap = BitmapSource.Create(width, height, dpiX, dpiY, format, palette, array, stride);
                 negativeFilterImage = bitmap;
                 negative_filter_preview.Source = negativeFilterImage;
-                negatiVeFilterThread.Abort();
             }));
-            Thread.CurrentThread.Abort();
-            negatiVeFilterThread.Abort();
         }
 
         private void CreateFilter_BlacknWhite()
@@ -247,10 +210,7 @@ namespace Magasin_De_Photo
                 sum = array[index],
                 average;
             
-            int /*offset = OffsetComputation(allPixels),
-                reelWidthNoOffset = noFilterImage.PixelWidth * 4,
-                reelWidth = noFilterImage.PixelWidth * 4 + offset,*/
-                indexMax = array.Length - 1;
+            int indexMax = array.Length - 1;
 
             bool leftClose     = index % reelWidth > 4,
                  upClose       = index - reelWidth > 0,
@@ -272,7 +232,7 @@ namespace Magasin_De_Photo
             }
             if (upClose)
             {
-                sum += array[index-reelWidth];
+                sum += array[index - reelWidth];
                 numbersInSum++;
             }
             if (rightClose)
@@ -332,7 +292,7 @@ namespace Magasin_De_Photo
 
         private void SetGlobalVariables()
         {
-            stride = (int)noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
+            stride = noFilterImage.PixelWidth * (noFilterImage.Format.BitsPerPixel + 7) / 8;
             width = noFilterImage.PixelWidth;
             height = noFilterImage.PixelHeight;
             allPixels = GetBitArrayFromImage();
@@ -392,7 +352,6 @@ namespace Magasin_De_Photo
 
             SetGlobalVariables();
             CreateAllFilters();
-            //negatiVeFilterThread.Start();
         }
 
         private void SaveImage(object sender, RoutedEventArgs e)
@@ -410,7 +369,6 @@ namespace Magasin_De_Photo
 
             var encoder = new BmpBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create((BitmapSource)display_image.Source));
-            //File.Delete(openedFileUri);
             using (var stream = saveFileDialog.OpenFile())
             {
                 encoder.Save(stream);
